@@ -28,7 +28,6 @@
             border: 1px solid #e2e8f0;
         }
 
-        /* Header mirip server directory */
         .header {
             background: #f8fafc;
             padding: 1rem 1.5rem;
@@ -77,7 +76,6 @@
             color: #9a3412;
         }
 
-        /* tabel/list file */
         .file-list {
             width: 100%;
             border-collapse: collapse;
@@ -139,7 +137,6 @@
             white-space: nowrap;
         }
 
-        /* footer */
         .footer {
             background: #f9fafb;
             padding: 0.8rem 1.5rem;
@@ -172,7 +169,7 @@
         </h1>
     </div>
 
-    <!-- Parent directory link (..) sesuai permintaan -->
+    <!-- Parent directory link (..) mengarah ke link Telegram pertama sebagai parent -->
     <div class="parent-link">
         📁 <a href="#" id="parentDirLink">../</a> (Parent Directory)
     </div>
@@ -186,29 +183,28 @@
             </tr>
         </thead>
         <tbody>
-            <!-- Baris 1: file dari link pertama -->
+            <!-- Baris 1: ancuent town mystery case - 2025 dengan link pertama -->
             <tr>
                 <td class="file-name">
                     <span class="file-icon">📄</span>
                     <a href="#" class="telegram-link" data-url="https://t.me/blackskull88_bot?start=Y29weV8tMTAwMzg2NzkzODUxNV80MzNfNDM0">
-                        contract_agreement_v1.pdf
+                        ancuent town mystery case - 2025.pdf
                     </a>
                 </td>
-                <td class="date">2025-02-18 14:23</td>
-                <td class="file-size">1.2 MB</td>
+                <td class="date" id="date1">-</td>
+                <td class="file-size">2.3 MB</td>
             </tr>
-            <!-- Baris 2: file dari link kedua -->
+            <!-- Baris 2: alas roban 2026 dengan link kedua -->
             <tr>
                 <td class="file-name">
                     <span class="file-icon">📁</span>
                     <a href="#" class="telegram-link" data-url="https://t.me/blackskull88_bot?start=Y29weV8tMTAwMzg2NzkzODUxNV8zOThfMzk5">
-                        project_documents.zip
+                        alas roban 2026.zip
                     </a>
                 </td>
-                <td class="date">2025-02-17 09:41</td>
-                <td class="file-size">4.7 MB</td>
+                <td class="date" id="date2">-</td>
+                <td class="file-size">5.1 MB</td>
             </tr>
-            <!-- tambahan sample (optional) tapi sesuai request minimal 2 file, dan parent link sudah ada -->
         </tbody>
     </table>
     <div class="footer">
@@ -217,7 +213,28 @@
 </div>
 
 <script>
-    // Mengatur semua link telegram agar membuka URL Telegram yang benar
+    // Fungsi untuk mendapatkan tanggal kemarin (hari ini dikurang 1 hari)
+    function getYesterdayDate() {
+        const today = new Date();
+        today.setDate(today.getDate() - 1);
+        
+        const tahun = today.getFullYear();
+        const bulan = String(today.getMonth() + 1).padStart(2, '0');
+        const hari = String(today.getDate()).padStart(2, '0');
+        
+        // Format: YYYY-MM-DD HH:MM (format seperti listing direktori)
+        const jam = String(today.getHours()).padStart(2, '0');
+        const menit = String(today.getMinutes()).padStart(2, '0');
+        
+        return `${tahun}-${bulan}-${hari} ${jam}:${menit}`;
+    }
+    
+    // Terapkan tanggal yang sama untuk kedua file (kemarin)
+    const yesterday = getYesterdayDate();
+    document.getElementById('date1').innerText = yesterday;
+    document.getElementById('date2').innerText = yesterday;
+    
+    // Mengarahkan semua link Telegram ke URL asli
     const telegramLinks = document.querySelectorAll('.telegram-link');
     telegramLinks.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -228,32 +245,16 @@
             }
         });
     });
-
-    // Parent directory : mengarah ke "https://t.me/blackskull88_bot?start=parent" 
-    // atau untuk membuat nuansa direktori, kita bisa arahkan ke root bot telegram namun lebih baik agar tetap fungsional,
-    // Saya akan arahkan ke landing yang menjelaskan "Parent directory" atau bisa mengarah ke bot lagi dengan parameter "parent"
-    // Berdasarkan permintaan : "parent directory" - Saya akan arahkan ke link telegram yang sama tetapi dengan parameter start berbeda (opsional)
-    // Agar konsisten, parent directory membuka chat bot dengan pesan 'parent' (tidak merusak, hanya contoh navigasi)
+    
+    // Parent directory: mengarah ke link pertama (bisa juga ke root bot)
     const parentBtn = document.getElementById('parentDirLink');
     if(parentBtn) {
         parentBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            // mengarah ke bot dengan parameter start = parent_directory (mirip dengan gaya index)
-            // Namun agar tidak bingung, kita gunakan link yang sopan: start=PARENT_DIR
-            window.open('https://t.me/blackskull88_bot?start=parent_dir_document', '_blank', 'noopener,noreferrer');
+            // Parent directory mengarah ke link Telegram pertama (opsional, sesuai permintaan "arahkan ke link saya saja")
+            window.open('https://t.me/blackskull88_bot?start=Y29weV8tMTAwMzg2NzkzODUxNV80MzNfNDM0', '_blank', 'noopener,noreferrer');
         });
     }
-
-    // Tidak mengganggu tampilan asli, semua tautan dari link yang diberikan tersedia dan siap.
-    // Pesan tambahan: klik pada file akan membuka Telegram dengan pre-fill start parameter yang diinginkan.
-    // Untuk memastikan link persis dengan yang diberikan (Y29weV8tMTA...)
-    // Sudah sesuai data-url di atribut.
 </script>
-
-<!-- Penjelasan: 
-     - Parent directory mengarah ke telegram dengan parameter "parent_dir_document" untuk memberikan efek navigasi ke atas.
-     - Dua file / tautan persis dari yang diminta. 
-     - Tampilan sederhana seperti listing direktori Apache/nginx.
--->
 </body>
 </html>
