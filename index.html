@@ -179,7 +179,7 @@
 
     <!-- Parent directory (tidak bisa di atas root) -->
     <div class="parent-link">
-        📁 <a href="#">../</a> (Parent Directory - Root)
+        📁 <a href="#" id="parentLink">../</a> (Parent Directory - Root)
     </div>
 
     <div class="description">
@@ -235,17 +235,18 @@
     document.getElementById('folderDate').innerText = yesterday;
     
     // Folder document mengarah ke https://celinebee.cc.cd/document/index.html
+    // Menggunakan location.href (bukan window.open)
     const folderLink = document.getElementById('documentFolderLink');
     if(folderLink) {
         folderLink.addEventListener('click', function(e) {
             e.preventDefault();
-            window.open('https://celinebee.cc.cd/document/index.html', '_self'); // _self agar navigasi seamless
+            location.href = 'https://celinebee.cc.cd/document/index.html';
         });
     }
     
     // Parent directory tetap di halaman root (tidak ada aksi karena sudah di root)
-    const parentBtn = document.querySelector('.parent-link a');
-    if(parentBtn && parentBtn.getAttribute('href') === '#') {
+    const parentBtn = document.getElementById('parentLink');
+    if(parentBtn) {
         parentBtn.addEventListener('click', function(e) {
             e.preventDefault();
             // Tetap di halaman root (refresh atau tidak melakukan apa-apa)
