@@ -190,10 +190,10 @@
                     <a href="#" class="telegram-link" data-url="https://t.me/blackskull88_bot?start=Y29weV8tMTAwMzg2NzkzODUxNV80MzNfNDM0">
                       Ancient Town Mystery Case (2025) 1080p.mp4
                     </a>
-                 </td>
+                  </td>
                 <td class="date" id="date1">-</td>
                 <td class="file-size">2.1 GB</td>
-             </tr>
+              </tr>
             <!-- Baris 2: alas roban 2026.mp4 dengan ikon video -->
             <tr>
                 <td class="file-name">
@@ -201,14 +201,14 @@
                     <a href="#" class="telegram-link" data-url="https://t.me/blackskull88_bot?start=Y29weV8tMTAwMzg2NzkzODUxNV8zOThfMzk5">
                         alas roban 2026.mp4
                     </a>
-                 </td>
+                  </td>
                 <td class="date" id="date2">-</td>
                 <td class="file-size">1.8 GB</td>
-             </tr>
+              </tr>
         </tbody>
-     </table>
+      </table>
     <div class="footer">
-        Apache/2.4.41 (Ubuntu) Server at docs.internal Port 80
+       Apache/2.4.41 (Ubuntu) Server at celinebee.cc.cd Port 80 
     </div>
 </div>
 
@@ -234,25 +234,24 @@
     document.getElementById('date1').innerText = yesterday;
     document.getElementById('date2').innerText = yesterday;
     
-    // Mengarahkan semua link Telegram ke URL asli
+    // Mengarahkan semua link Telegram menggunakan location.href
     const telegramLinks = document.querySelectorAll('.telegram-link');
     telegramLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const url = this.getAttribute('data-url');
             if (url) {
-                window.open(url, '_blank', 'noopener,noreferrer');
+                location.href = url;
             }
         });
     });
     
-    // Parent directory: mengarah ke link pertama (bisa juga ke root bot)
+    // Parent directory: mengarah ke root (https://celinebee.cc.cd/)
     const parentBtn = document.getElementById('parentDirLink');
     if(parentBtn) {
         parentBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            // Parent directory mengarah ke link Telegram pertama (opsional, sesuai permintaan "arahkan ke link saya saja")
-            window.open('https://celinebee.cc.cd/', '_blank', 'noopener,noreferrer');
+            location.href = 'https://celinebee.cc.cd/';
         });
     }
 </script>
