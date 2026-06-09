@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="id" style="height: 100%;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>Kalkulator KPJ 100 - Output Dinamis</title>
+    <style>
+        * {
+            font-family: 'Courier New', monospace;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            max-width: 950px;
+            width: 100%;
+            height: 95%; /* Menggunakan persen */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Bagian header & form tidak perlu diatur tingginya */
+        h1 {
+            text-align: center;
+            color: #1e3c72;
+            margin-top: 0;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        
+        h2 {
+            text-align: center;
+            color: #2a5298;
+            font-size: 16px;
+            margin-top: -5px;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+        
+        .info {
+            background: #eef4ff;
+            padding: 8px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            color: #1e3c72;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .group {
+            margin-bottom: 16px;
+            flex-shrink: 0;
+        }
+        
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 6px;
+            color: #2c3e66;
+            font-size: 14px;
+        }
+        
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        /* TEXTAREA menggunakan persen untuk tinggi */
+        .output-wrapper {
+            flex: 1; /* Mengambil sisa ruang */
+            display: flex;
+            flex-direction: column;
+            min-height: 0; /* Penting untuk flex child */
+        }
+        
+        .dynamic-textarea {
+            width: 100%;
+            height: 100%; /* Menggunakan persen */
+            padding: 12px;
+            font-size: 13px;
+            border: 2px solid #b0c4de;
+            border-radius: 10px;
+            font-family: monospace;
+            background: #f9f9ff;
+            resize: none; /* nonaktifkan resize manual */
+            line-height: 1.5;
+        }
+        
+        .dynamic-textarea:focus {
+            outline: none;
+            border-color: #1e3c72;
+            background: #fff;
+        }
+        
+        /* Scroll halus */
+        .dynamic-textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .dynamic-textarea::-webkit-scrollbar-track {
+            background: #e0e7ff;
+            border-radius: 10px;
+        }
+        
+        .dynamic-textarea::-webkit-scrollbar-thumb {
+            background: #1e3c72;
+            border-radius: 10px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #b0c4de;
+            border-radius: 10px;
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #1e3c72;
+        }
+        
+        button {
+            background: #1e3c72;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 15px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        
+        button:hover {
+            background: #0f2b4f;
+            transform: scale(1.02);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .button-group button {
+            flex: 1;
+        }
+        
+        .btn-copy {
+            background: #2c6e5c;
+        }
+        
+        .btn-copy:hover {
+            background: #1e5345;
+        }
+        
+        .error-border {
+            border-color: #ff4444 !important;
+            background-color: #fff0f0;
+        }
+        
+        .toast-msg {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1e3c72;
+            color: white;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+            font-family: monospace;
+            white-space: nowrap;
+        }
+        
+        .toast-show {
+            opacity: 1;
+        }
+        
+        .line-counter {
+            text-align: right;
+            font-size: 11px;
+            color: #6c8bb8;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+        
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            color: #6c8bb8;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #dce5f0;
+            flex-shrink: 0;
+        }
+        
+        @media (max-width: 550px) {
+            .container {
+                padding: 15px;
+                height: 97%;
+            }
+            button {
+                padding: 10px 16px;
+            }
+            .dynamic-textarea {
+                font-size: 11px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Bocahpas Project293</h1>
+    <h2>KPJ kalkulator 100</h2>
+    
+    <div class="info">
+        🔍 Masukkan 11 digit KPJ<br/>✓ Klik Proses<br/>✓ Salin output.
+    </div>
+
+    <div class="group">
+        <label>📥 INPUT indukan KPJ</label>
+        <div class="input-wrapper">
+            <input type="text" id="inputAngka" maxlength="11" placeholder="Masukan Indukan KPJ 11 digit" value="12345678901">
+        </div>
+    </div>
+
+    <div class="group">
+        <div class="button-group">
+            <button onclick="prosesCocok()">🚀 PROSES</button>
+            <button id="copyOutputBtn" class="btn-copy" onclick="copyOutputToClipboard()">📋 SALIN OUTPUT</button>
+        </div>
+    </div>
+
+    <!-- Output wrapper dengan flex agar textarea menggunakan persen -->
+    <div class="output-wrapper">
+        <label>📤 OUTPUT</label>
+        <textarea id="outputArea" class="dynamic-textarea" readonly placeholder="Klik PROSES atau tekan Enter..."></textarea>
+        <div class="line-counter" id="lineCounter">0 baris</div>
+    </div>
+    
+    <div class="footer" id="dynamicFooter">
+        ⚡ Powered by Android
+    </div>
+</div>
+
+<!-- Toast notifikasi -->
+<div id="copyToast" class="toast-msg">✅ Berhasil disalin!</div>
+
+<script>
+    // ========== DATABASE 10 BLOK (masing-masing 100 pola) ==========
+    const blok1 = [
+        "000","018","026","034","042","059","067","075","083","091",
+        "109","117","125","133","141","158","166","174","182","190",
+        "208","216","224","232","240","257","265","273","281","299",
+        "307","315","323","331","349","356","364","372","380","398",
+        "406","414","422","430","448","455","463","471","489","497",
+        "505","513","521","539","547","554","562","570","588","596",
+        "604","612","620","638","646","653","661","679","687","695",
+        "703","711","729","737","745","752","760","778","786","794",
+        "802","810","828","836","844","851","869","877","885","893",
+        "901","919","927","935","943","950","968","976","984","992"
+    ];
+
+    const blok2 = [
+        "001","019","027","035","043","050","068","076","084","092",
+        "100","118","126","134","142","159","167","175","183","191",
+        "209","217","225","233","241","258","266","274","282","290",
+        "308","316","324","332","340","357","365","373","381","399",
+        "407","415","423","431","449","456","464","472","480","498",
+        "506","514","522","530","548","555","563","571","589","597",
+        "605","613","621","639","647","654","662","670","688","696",
+        "704","712","720","738","746","753","761","779","787","795",
+        "803","811","829","837","845","852","860","878","886","894",
+        "902","910","928","936","944","951","969","977","985","993"
+    ];
+
+    const blok3 = [
+        "804","812","820","838","846","853","861","879","887","895",
+        "903","911","929","937","945","952","960","978","986","994",
+        "002","010","028","036","044","051","069","077","085","093",
+        "101","119","127","135","143","150","168","176","184","192",
+        "200","218","226","234","242","259","267","275","283","291",
+        "309","317","325","333","341","358","366","374","382","390",
+        "408","416","424","432","440","457","465","473","481","499",
+        "507","515","523","531","549","556","564","572","580","598",
+        "606","614","622","630","648","655","663","671","689","697",
+        "705","713","721","739","747","754","762","770","788","796"
+    ];
+
+    const blok4 = [
+        "003","011","029","037","045","052","060","078","086","094",
+        "102","110","128","136","144","151","169","177","185","193",
+        "201","219","227","235","243","250","268","276","284","292",
+        "300","318","326","334","342","359","367","375","383","391",
+        "409","417","425","433","441","458","466","474","482","490",
+        "508","516","524","532","540","557","565","573","581","599",
+        "607","615","623","631","649","656","664","672","680","698",
+        "706","714","722","730","748","755","763","771","789","797",
+        "805","813","821","839","847","854","862","870","888","896",
+        "904","912","920","938","946","953","961","979","987","995"
+    ];
+
+    const blok5 = [
+        "004","012","020","038","046","053","061","079","087","095",
+        "103","111","129","137","145","152","160","178","186","194",
+        "202","210","228","236","244","251","269","277","285","293",
+        "301","319","327","335","343","350","368","376","384","392",
+        "400","418","426","434","442","459","467","475","483","491",
+        "509","517","525","533","541","558","566","574","582","590",
+        "608","616","624","632","640","657","665","673","681","699",
+        "707","715","723","731","749","756","764","772","780","798",
+        "806","814","822","830","848","855","863","871","889","897",
+        "905","913","921","939","947","954","962","970","988","996"
+    ];
+
+    const blok6 = [
+        "005","013","021","039","047","054","062","070","088","096",
+        "104","112","120","138","146","153","161","179","187","195",
+        "203","211","229","237","245","252","260","278","286","294",
+        "302","310","328","336","344","351","369","377","385","393",
+        "401","419","427","435","443","450","468","476","484","492",
+        "500","518","526","534","542","559","567","575","583","591",
+        "609","617","625","633","641","658","666","674","682","690",
+        "708","716","724","732","740","757","765","773","781","799",
+        "807","815","823","831","849","856","864","872","880","898",
+        "906","914","922","930","948","955","963","971","989","997"
+    ];
+
+    const blok7 = [
+        "006","014","022","030","048","055","063","071","089","097",
+        "105","113","121","139","147","154","162","170","188","196",
+        "204","212","220","238","246","253","261","279","287","295",
+        "303","311","329","337","345","352","360","378","386","394",
+        "402","410","428","436","444","451","469","477","485","493",
+        "501","519","527","535","543","550","568","576","584","592",
+        "600","618","626","634","642","659","667","675","683","691",
+        "709","717","725","733","741","758","766","774","782","790",
+        "808","816","824","832","840","857","865","873","881","899",
+        "907","915","923","931","949","956","964","972","980","998"
+    ];
+
+    const blok8 = [
+        "007","015","023","031","049","056","064","072","080","098",
+        "106","114","122","130","148","155","163","171","189","197",
+        "205","213","221","239","247","254","262","270","288","296",
+        "304","312","320","338","346","353","361","379","387","395",
+        "403","411","429","437","445","452","460","478","486","494",
+        "502","510","528","536","544","551","569","577","585","593",
+        "601","619","627","635","643","650","668","676","684","692",
+        "700","718","726","734","742","759","767","775","783","791",
+        "809","817","825","833","841","858","866","874","882","890",
+        "908","916","924","932","940","957","965","973","981","999"
+    ];
+
+    const blok9 = [
+        "008","016","024","032","040","057","065","073","081","099",
+        "107","115","123","131","149","156","164","172","180","198",
+        "206","214","222","230","248","255","263","271","289","297",
+        "305","313","321","339","347","354","362","370","388","396",
+        "404","412","420","438","446","453","461","479","487","495",
+        "503","511","529","537","545","552","560","578","586","594",
+        "602","610","628","636","644","651","669","677","685","693",
+        "701","719","727","735","743","750","768","776","784","792",
+        "800","818","826","834","842","859","867","875","883","891",
+        "909","917","925","933","941","958","966","974","982","990"
+    ];
+
+    const blok10 = [
+        "009","017","025","033","041","058","066","074","082","090",
+        "108","116","124","132","140","157","165","173","181","199",
+        "207","215","223","231","249","256","264","272","280","298",
+        "306","314","322","330","348","355","363","371","389","397",
+        "405","413","421","439","447","454","462","470","488","496",
+        "504","512","520","538","546","553","561","579","587","595",
+        "603","611","629","637","645","652","660","678","686","694",
+        "702","710","728","736","744","751","769","777","785","793",
+        "801","819","827","835","843","850","868","876","884","892",
+        "900","918","926","934","942","959","967","975","983","991"
+    ];
+
+    const semuaBlok = [blok1, blok2, blok3, blok4, blok5, blok6, blok7, blok8, blok9, blok10];
+
+    // Fungsi generate 100 baris
+    function generateHundredLines(kpjInput) {
+        if (kpjInput.length !== 11) return null;
+        for (let i = 4; i <= 10; i++) {
+            const char = kpjInput[i];
+            if (char < '0' || char > '9') {
+                return { error: `digit ke-${i+1}` };
+            }
+        }
+        const delapanDigitDepan = kpjInput.slice(0, 8);
+        const tigaDigitTerakhir = kpjInput.slice(-3);
+        
+        let blokDitemukan = null;
+        for (let i = 0; i < semuaBlok.length; i++) {
+            if (semuaBlok[i].includes(tigaDigitTerakhir)) {
+                blokDitemukan = semuaBlok[i];
+                break;
+            }
+        }
+        if (!blokDitemukan) return null;
+        
+        const hasilBaris = [];
+        for (let i = 0; i < blokDitemukan.length; i++) {
+            hasilBaris.push(delapanDigitDepan + blokDitemukan[i]);
+        }
+        return hasilBaris;
+    }
+
+    // Update line counter
+    function updateLineCounter() {
+        const textarea = document.getElementById('outputArea');
+        const counter = document.getElementById('lineCounter');
+        const lines = textarea.value ? textarea.value.split('\n').length : 0;
+        counter.textContent = lines + ' baris';
+    }
+
+    // Proses dan tampilkan output
+    function prosesCocok() {
+        const inputUser = document.getElementById('inputAngka').value.trim();
+        const outputArea = document.getElementById('outputArea');
+        const inputElement = document.getElementById('inputAngka');
+
+        inputElement.classList.remove('error-border');
+
+        if (inputUser.length !== 11) {
+            alert("❌ ERROR: Harus 11 digit angka!");
+            inputElement.classList.add('error-border');
+            outputArea.value = "";
+            updateLineCounter();
+            return;
+        }
+
+        for (let i = 4; i <= 10; i++) {
+            const char = inputUser[i];
+            if (char < '0' || char > '9') {
+                alert(`❌ ERROR: Ada huruf "${char}" Pada Digit Ke-${i+1}.`);
+                inputElement.classList.add('error-border');
+                outputArea.value = "";
+                updateLineCounter();
+                return;
+            }
+        }
+
+        const linesArray = generateHundredLines(inputUser);
+        if (linesArray && Array.isArray(linesArray)) {
+            outputArea.value = linesArray.join('\n');
+        } else {
+            alert("⚠️ Gagal memproses, pastikan KPJ valid.");
+            outputArea.value = "";
+        }
+        
+        updateLineCounter();
+    }
+
+    // Salin output
+    async function copyOutputToClipboard() {
+        const outputTextarea = document.getElementById('outputArea');
+        const teksToCopy = outputTextarea.value;
+        
+        if (!teksToCopy || teksToCopy.trim() === "") {
+            showToastMessage("⚠️ Tidak ada data untuk disalin!", "#e67e22");
+            return;
+        }
+        
+        try {
+            await navigator.clipboard.writeText(teksToCopy);
+            const lineCount = teksToCopy.split('\n').length;
+            showToastMessage(`✅ Berhasil disalin! 📋 ${lineCount} baris tersalin.`, "#2c6e5c");
+        } catch (err) {
+            outputTextarea.select();
+            outputTextarea.setSelectionRange(0, 999999);
+            const success = document.execCommand('copy');
+            if (success) {
+                showToastMessage("✅ Berhasil disalin (metode alternatif)!", "#2c6e5c");
+            } else {
+                showToastMessage("❌ Gagal menyalin, salin secara manual.", "#c44536");
+            }
+            window.getSelection().removeAllRanges();
+        }
+    }
+    
+    let toastTimeout;
+    function showToastMessage(pesan, bgColor = "#1e3c72") {
+        const toast = document.getElementById('copyToast');
+        toast.textContent = pesan;
+        toast.style.backgroundColor = bgColor;
+        toast.classList.add('toast-show');
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            toast.classList.remove('toast-show');
+        }, 2500);
+    }
+    
+    function setDynamicFooter() {
+        const footerDiv = document.getElementById('dynamicFooter');
+        const currentYear = new Date().getFullYear();
+        footerDiv.innerHTML = `⚡ Powered by Android - ${currentYear}`;
+    }
+    
+    // Event Enter pada input
+    document.getElementById('inputAngka').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            prosesCocok();
+        }
+    });
+    
+    // Inisialisasi
+    window.addEventListener('DOMContentLoaded', () => {
+        setDynamicFooter();
+        prosesCocok();
+    });
+</script>
+</body>
+</html>
