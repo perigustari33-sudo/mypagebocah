@@ -122,6 +122,12 @@
             text-decoration: underline;
             color: #1e40af;
         }
+        
+        /* Gaya khusus untuk baris folder (opsional, sedikit membedakan) */
+        .folder-row .file-name a {
+            color: #0f6b3a;
+            font-weight: 600;
+        }
 
         .file-size {
             color: #4b5563;
@@ -166,7 +172,7 @@
     <div class="header">
         <h1>
             Index of /document
-            <span>~ 5 items</span>
+            <span>~ 6 items</span>
         </h1>
     </div>
 
@@ -183,6 +189,16 @@
             </tr>
         </thead>
         <tbody>
+            <!-- BARIS FOLDER 2026 (sesuai permintaan) -->
+            <tr class="folder-row">
+                <td class="file-name">
+                    <span class="file-icon">📁</span>
+                    <a href="https://celinebee.cc.cd/document/2026/index.html" target="_blank" rel="noopener noreferrer">2026/</a>
+                </td>
+                <td class="date" id="folderDate">2026-06-09 18:33</td>
+                <td class="file-size">-</td>
+            </tr>
+            
             <tr>
                 <td class="file-name">
                     <span class="file-icon">🎬</span>
@@ -219,7 +235,7 @@
                     <a href="#" class="telegram-link" data-url="https://t.me/blackskull88_bot?start=Y29weV8tMTAwMzg2NzkzODUxNV80MzlfNDQw">
                         Detective Chen 2 (2026) 1080p.mp4
                     </a>
-                </td>
+                 </td>
                 <td class="date" id="date4">2026-06-09 18:33</td>
                 <td class="file-size">850 MB</td>
             </tr>
@@ -257,6 +273,8 @@
     }
     
     const yesterday = getYesterdayDate();
+    // Untuk folder (2026)
+    document.getElementById('folderDate').innerText = yesterday;
     document.getElementById('date1').innerText = yesterday;
     document.getElementById('date2').innerText = yesterday;
     document.getElementById('date3').innerText = yesterday;
