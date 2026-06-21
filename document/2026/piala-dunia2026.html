@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M3U Playlist Player</title>
+    <title>M3U Video Player</title>
     <style>
         * {
             margin: 0;
@@ -12,7 +12,7 @@
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a1a2e;
+            background: #0a0a1a;
             color: #eee;
             display: flex;
             justify-content: center;
@@ -21,12 +21,12 @@
             padding: 20px;
         }
         .player-container {
-            max-width: 700px;
+            max-width: 900px;
             width: 100%;
             background: #16213e;
             border-radius: 24px;
             padding: 25px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
             transition: 0.3s;
         }
         h2 {
@@ -60,11 +60,26 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        .video-wrapper {
+            position: relative;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            aspect-ratio: 16 / 9;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: #000;
+            outline: none;
+        }
         .playlist-box {
             background: #0f3460;
             border-radius: 16px;
             padding: 10px 0;
-            max-height: 350px;
+            max-height: 250px;
             overflow-y: auto;
             margin-bottom: 20px;
             scrollbar-width: thin;
@@ -123,27 +138,13 @@
             background: #c73652;
             color: #fff;
         }
-        .audio-wrapper {
-            background: #0f3460;
-            border-radius: 40px;
-            padding: 12px 18px;
-            margin-top: 5px;
-        }
-        audio {
-            width: 100%;
-            outline: none;
-            border-radius: 40px;
-            background: #1a1a2e;
-        }
-        audio::-webkit-media-controls-panel {
-            background: #1a1a2e;
-        }
         .controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 18px;
+            margin-top: 15px;
             gap: 10px;
+            flex-wrap: wrap;
         }
         .btn {
             background: #e94560;
@@ -158,6 +159,7 @@
             flex: 1;
             text-align: center;
             letter-spacing: 0.5px;
+            min-width: 80px;
         }
         .btn:hover {
             background: #ff6b81;
@@ -211,19 +213,34 @@
             cursor: pointer;
             font-size: 0.75rem;
             transition: 0.2s;
-            margin-top: 5px;
         }
         .refresh-btn:hover {
             background: #2a5a9a;
             color: white;
         }
-        @media (max-width: 500px) {
-            .controls {
-                flex-wrap: wrap;
-            }
+        .video-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #8a9bb5;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .video-title {
+            color: #e0e0e0;
+            font-weight: 500;
+        }
+        @media (max-width: 600px) {
             .controls .btn {
                 flex: 1 1 30%;
-                min-width: 80px;
+                min-width: 70px;
+                font-size: 0.8rem;
+                padding: 8px 12px;
+            }
+            .video-wrapper {
+                aspect-ratio: 16 / 9;
             }
         }
     </style>
@@ -231,11 +248,23 @@
 <body>
 
 <div class="player-container">
-    <h2>🎵 M3U Playlist Player</h2>
+    <h2>🎬 M3U Video Player</h2>
 
     <div class="loading-info" id="loadingInfo">
         <span class="spinner"></span>
         <span id="loadingText">Memuat playlist dari server...</span>
+    </div>
+
+    <div class="video-wrapper">
+        <video id="videoPlayer" controls preload="metadata">
+            <source src="" type="video/mp4">
+            Browser tidak mendukung video.
+        </video>
+    </div>
+
+    <div class="video-info">
+        <span class="video-title" id="videoTitle">Belum ada video diputar</span>
+        <span id="videoCounter">0 / 0</span>
     </div>
 
     <div class="playlist-box" id="playlistContainer">
@@ -244,14 +273,7 @@
         </div>
     </div>
 
-    <div class="track-count" id="trackCount">Total: 0 trek</div>
-
-    <div class="audio-wrapper">
-        <audio id="audioPlayer" controls preload="metadata">
-            <source src="" type="audio/mpeg">
-            Browser tidak mendukung audio.
-        </audio>
-    </div>
+    <div class="track-count" id="trackCount">Total: 0 video</div>
 
     <div class="controls">
         <button class="btn" id="playBtn" disabled>▶ Putar</button>
@@ -261,6 +283,7 @@
 
     <div style="display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap;">
         <button class="refresh-btn" id="refreshBtn">🔄 Refresh Playlist</button>
+        <button class="refresh-btn" id="fullscreenBtn">⛶ Layar Penuh</button>
     </div>
 
     <div class="status" id="statusMessage">Status: Memuat playlist...</div>
@@ -278,16 +301,19 @@
         let isLoading = false;
 
         // DOM elements
-        const audio = document.getElementById('audioPlayer');
+        const video = document.getElementById('videoPlayer');
         const playlistContainer = document.getElementById('playlistContainer');
         const statusMsg = document.getElementById('statusMessage');
         const trackCount = document.getElementById('trackCount');
         const loadingInfo = document.getElementById('loadingInfo');
         const loadingText = document.getElementById('loadingText');
+        const videoTitle = document.getElementById('videoTitle');
+        const videoCounter = document.getElementById('videoCounter');
         const playBtn = document.getElementById('playBtn');
         const nextBtn = document.getElementById('nextBtn');
         const prevBtn = document.getElementById('prevBtn');
         const refreshBtn = document.getElementById('refreshBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
 
         // --- Helper functions ---
         function setStatus(msg, type = 'info') {
@@ -326,16 +352,28 @@
             });
         }
 
+        function updateVideoInfo() {
+            if (tracks.length > 0 && currentIndex < tracks.length) {
+                const track = tracks[currentIndex];
+                videoTitle.textContent = track.title || 'Tanpa judul';
+                videoCounter.textContent = `${currentIndex + 1} / ${tracks.length}`;
+            } else {
+                videoTitle.textContent = 'Belum ada video diputar';
+                videoCounter.textContent = '0 / 0';
+            }
+        }
+
         // --- Render playlist ---
         function renderPlaylist() {
             if (!tracks.length) {
                 playlistContainer.innerHTML = `
                     <div style="padding: 20px; text-align: center; color: #8a9bb5;">
-                        <span>📂 Tidak ada trek ditemukan</span><br>
+                        <span>📂 Tidak ada video ditemukan</span><br>
                         <span style="font-size: 0.8rem;">Coba refresh atau periksa URL M3U</span>
                     </div>
                 `;
-                trackCount.textContent = 'Total: 0 trek';
+                trackCount.textContent = 'Total: 0 video';
+                updateVideoInfo();
                 return;
             }
 
@@ -352,7 +390,8 @@
                 `;
             });
             playlistContainer.innerHTML = html;
-            trackCount.textContent = `Total: ${tracks.length} trek`;
+            trackCount.textContent = `Total: ${tracks.length} video`;
+            updateVideoInfo();
 
             document.querySelectorAll('.track-item').forEach(item => {
                 item.addEventListener('click', function() {
@@ -367,19 +406,30 @@
         // --- Play track ---
         function playTrack(index) {
             if (!tracks.length || index < 0 || index >= tracks.length) {
-                setStatus('Tidak ada trek yang tersedia', 'warning');
+                setStatus('Tidak ada video yang tersedia', 'warning');
                 return;
             }
             currentIndex = index;
             const track = tracks[currentIndex];
             if (!track.file) {
-                setStatus('File tidak ditemukan untuk trek ini', 'error');
+                setStatus('File tidak ditemukan untuk video ini', 'error');
                 return;
             }
 
-            audio.src = track.file;
-            audio.load();
-            audio.play().then(() => {
+            // Deteksi tipe video dari ekstensi
+            const fileExt = track.file.split('.').pop().toLowerCase();
+            let videoType = 'video/mp4';
+            if (fileExt === 'mkv') videoType = 'video/x-matroska';
+            else if (fileExt === 'avi') videoType = 'video/x-msvideo';
+            else if (fileExt === 'mov') videoType = 'video/quicktime';
+            else if (fileExt === 'webm') videoType = 'video/webm';
+            else if (fileExt === 'ogg') videoType = 'video/ogg';
+            else if (fileExt === 'm3u8') videoType = 'application/x-mpegURL';
+            else if (fileExt === 'ts') videoType = 'video/MP2T';
+
+            video.src = track.file;
+            video.load();
+            video.play().then(() => {
                 isPlaying = true;
                 playBtn.textContent = '⏸ Jeda';
                 setStatus(`Memutar: ${track.title || 'Tanpa judul'}`, 'success');
@@ -408,12 +458,12 @@
                 setStatus('Playlist kosong', 'warning');
                 return;
             }
-            if (audio.paused) {
-                if (audio.src) {
-                    audio.play().then(() => {
+            if (video.paused) {
+                if (video.src) {
+                    video.play().then(() => {
                         isPlaying = true;
                         playBtn.textContent = '⏸ Jeda';
-                        setStatus(`Memutar: ${tracks[currentIndex]?.title || 'Lagu'}`, 'success');
+                        setStatus(`Memutar: ${tracks[currentIndex]?.title || 'Video'}`, 'success');
                     }).catch(err => {
                         setStatus('Gagal memutar', 'error');
                     });
@@ -421,10 +471,22 @@
                     playTrack(currentIndex);
                 }
             } else {
-                audio.pause();
+                video.pause();
                 isPlaying = false;
                 playBtn.textContent = '▶ Putar';
                 setStatus('Dijeda', 'warning');
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    setStatus(`Gagal fullscreen: ${err.message}`, 'error');
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
             }
         }
 
@@ -508,14 +570,13 @@
                     currentIndex = 0;
                     renderPlaylist();
                     enableControls(true);
-                    setStatus(`Berhasil memuat ${tracks.length} trek dari server`, 'success');
+                    setStatus(`Berhasil memuat ${tracks.length} video dari server`, 'success');
                     
-                    // Auto play pertama
                     if (tracks.length > 0) {
                         playTrack(0);
                     }
                 } else {
-                    setStatus('Tidak ditemukan trek dalam file M3U', 'warning');
+                    setStatus('Tidak ditemukan video dalam file M3U', 'warning');
                     enableControls(false);
                 }
             } catch (err) {
@@ -538,9 +599,35 @@
         nextBtn.addEventListener('click', nextTrack);
         prevBtn.addEventListener('click', prevTrack);
         refreshBtn.addEventListener('click', loadM3UFromServer);
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
 
-        // Audio events
-        audio.addEventListener('ended', function() {
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'INPUT') return;
+            
+            switch(e.key) {
+                case ' ':
+                case 'Space':
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    nextTrack();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    prevTrack();
+                    break;
+                case 'f':
+                case 'F':
+                    toggleFullscreen();
+                    break;
+            }
+        });
+
+        // Video events
+        video.addEventListener('ended', function() {
             if (tracks.length) {
                 nextTrack();
             } else {
@@ -550,23 +637,22 @@
             }
         });
 
-        audio.addEventListener('play', function() {
+        video.addEventListener('play', function() {
             isPlaying = true;
             playBtn.textContent = '⏸ Jeda';
         });
-        audio.addEventListener('pause', function() {
+        video.addEventListener('pause', function() {
             isPlaying = false;
             playBtn.textContent = '▶ Putar';
         });
 
-        audio.addEventListener('error', function(e) {
-            setStatus(`Error audio: ${e.target.error?.message || 'Tidak bisa memutar'}`, 'error');
+        video.addEventListener('error', function(e) {
+            setStatus(`Error video: ${e.target.error?.message || 'Tidak bisa memutar'}`, 'error');
             isPlaying = false;
             playBtn.textContent = '▶ Putar';
         });
 
         // --- Start ---
-        // Muat playlist otomatis saat halaman dimuat
         window.addEventListener('load', function() {
             loadM3UFromServer();
         });
