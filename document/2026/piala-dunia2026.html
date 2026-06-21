@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>M3U Video Player</title>
-     <script src="https://celinebee.cc.cd/iklan/ads.js" data-cfasync="false"></script>
     <style>
         * {
             margin: 0;
@@ -28,7 +27,6 @@
             border-radius: 24px;
             padding: 25px;
             box-shadow: 0 15px 40px rgba(0,0,0,0.8);
-            transition: 0.3s;
         }
         h2 {
             text-align: center;
@@ -38,6 +36,23 @@
             color: #e0e0e0;
             border-bottom: 2px solid #0f3460;
             padding-bottom: 12px;
+        }
+        .warning-box {
+            background: #2a1a0a;
+            border: 1px solid #ffd93d;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #ffd93d;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .warning-box.show {
+            display: block;
+        }
+        .warning-box .icon {
+            font-size: 24px;
+            margin-right: 10px;
         }
         .loading-info {
             background: #0f3460;
@@ -68,6 +83,7 @@
             overflow: hidden;
             margin-bottom: 20px;
             aspect-ratio: 16 / 9;
+            min-height: 300px;
         }
         video {
             width: 100%;
@@ -75,6 +91,41 @@
             display: block;
             background: #000;
             outline: none;
+        }
+        .video-error-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0,0,0,0.85);
+            color: #ff6b6b;
+            padding: 20px;
+            text-align: center;
+            display: none;
+        }
+        .video-error-overlay.show {
+            display: flex;
+        }
+        .video-error-overlay .error-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .video-error-overlay .error-msg {
+            font-size: 14px;
+            color: #ccc;
+            max-width: 500px;
+            margin-top: 5px;
+        }
+        .video-error-overlay .error-solution {
+            font-size: 12px;
+            color: #ffd93d;
+            margin-top: 10px;
+            max-width: 500px;
         }
         .playlist-box {
             background: #0f3460;
@@ -125,6 +176,7 @@
             font-size: 0.95rem;
             font-weight: 500;
             word-break: break-word;
+            flex: 1;
         }
         .track-duration {
             font-size: 0.8rem;
@@ -159,7 +211,6 @@
             transition: 0.2s;
             flex: 1;
             text-align: center;
-            letter-spacing: 0.5px;
             min-width: 80px;
         }
         .btn:hover {
@@ -185,6 +236,7 @@
             padding: 8px;
             border-radius: 8px;
             background: #0a0a1a;
+            word-break: break-all;
         }
         .status.error {
             color: #ff6b6b;
@@ -232,6 +284,37 @@
         .video-title {
             color: #e0e0e0;
             font-weight: 500;
+            flex: 1;
+        }
+        .protocol-info {
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: #0a0a1a;
+            color: #8a9bb5;
+        }
+        .protocol-info.secure {
+            color: #51cf66;
+            border: 1px solid #51cf66;
+        }
+        .protocol-info.insecure {
+            color: #ffd93d;
+            border: 1px solid #ffd93d;
+        }
+        .debug-info {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 5px;
+            padding: 8px;
+            background: #0a0a1a;
+            border-radius: 8px;
+            word-break: break-all;
+            max-height: 60px;
+            overflow-y: auto;
+            display: none;
+        }
+        .debug-info.show {
+            display: block;
         }
         @media (max-width: 600px) {
             .controls .btn {
@@ -242,6 +325,7 @@
             }
             .video-wrapper {
                 aspect-ratio: 16 / 9;
+                min-height: 200px;
             }
         }
     </style>
@@ -251,21 +335,37 @@
 <div class="player-container">
     <h2>🎬 M3U Video Player</h2>
 
+    <!-- Warning Mixed Content -->
+    <div class="warning-box" id="warningBox">
+        <span class="icon">⚠️</span>
+        <span id="warningText">Peringatan: Konten campuran (Mixed Content) terdeteksi. Video mungkin diblokir oleh browser.</span>
+    </div>
+
     <div class="loading-info" id="loadingInfo">
         <span class="spinner"></span>
         <span id="loadingText">Memuat playlist dari server...</span>
     </div>
 
     <div class="video-wrapper">
-        <video id="videoPlayer" controls preload="metadata">
+        <video id="videoPlayer" controls preload="metadata" crossorigin="anonymous">
             <source src="" type="video/mp4">
             Browser tidak mendukung video.
         </video>
+        <div class="video-error-overlay" id="videoErrorOverlay">
+            <div class="error-icon">🔒</div>
+            <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px;">Video Tidak Dapat Diputar</div>
+            <div class="error-msg" id="errorMsg">Terjadi kesalahan saat memutar video</div>
+            <div class="error-solution" id="errorSolution">
+                💡 Jika ini masalah Mixed Content, coba:<br>
+                1. Akses halaman melalui HTTP (bukan HTTPS)<br>
+                2. Atau gunakan ekstensi browser yang mengizinkan mixed content
+            </div>
+        </div>
     </div>
 
     <div class="video-info">
         <span class="video-title" id="videoTitle">Belum ada video diputar</span>
-        <span id="videoCounter">0 / 0</span>
+        <span class="protocol-info" id="protocolInfo">🔒 HTTPS</span>
     </div>
 
     <div class="playlist-box" id="playlistContainer">
@@ -285,9 +385,12 @@
     <div style="display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap;">
         <button class="refresh-btn" id="refreshBtn">🔄 Refresh Playlist</button>
         <button class="refresh-btn" id="fullscreenBtn">⛶ Layar Penuh</button>
+        <button class="refresh-btn" id="debugBtn">🐛 Debug</button>
+        <button class="refresh-btn" id="fixMixedBtn" style="background:#e94560;">🔓 Coba Fix Mixed Content</button>
     </div>
 
     <div class="status" id="statusMessage">Status: Memuat playlist...</div>
+    <div class="debug-info" id="debugInfo"></div>
 </div>
 
 <script>
@@ -300,6 +403,8 @@
         let currentIndex = 0;
         let isPlaying = false;
         let isLoading = false;
+        let debugMode = false;
+        let protocolFix = false;
 
         // DOM elements
         const video = document.getElementById('videoPlayer');
@@ -310,17 +415,40 @@
         const loadingText = document.getElementById('loadingText');
         const videoTitle = document.getElementById('videoTitle');
         const videoCounter = document.getElementById('videoCounter');
+        const videoErrorOverlay = document.getElementById('videoErrorOverlay');
+        const errorMsg = document.getElementById('errorMsg');
+        const errorSolution = document.getElementById('errorSolution');
+        const warningBox = document.getElementById('warningBox');
+        const warningText = document.getElementById('warningText');
+        const protocolInfo = document.getElementById('protocolInfo');
         const playBtn = document.getElementById('playBtn');
         const nextBtn = document.getElementById('nextBtn');
         const prevBtn = document.getElementById('prevBtn');
         const refreshBtn = document.getElementById('refreshBtn');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const debugBtn = document.getElementById('debugBtn');
+        const fixMixedBtn = document.getElementById('fixMixedBtn');
+        const debugInfo = document.getElementById('debugInfo');
+
+        // --- Debug logging ---
+        function debugLog(msg, data = null) {
+            if (!debugMode) return;
+            const timestamp = new Date().toLocaleTimeString();
+            let logMsg = `[${timestamp}] ${msg}`;
+            if (data) {
+                logMsg += `\n${JSON.stringify(data, null, 2)}`;
+            }
+            debugInfo.textContent += logMsg + '\n---\n';
+            debugInfo.scrollTop = debugInfo.scrollHeight;
+            console.log(`[DEBUG] ${msg}`, data);
+        }
 
         // --- Helper functions ---
         function setStatus(msg, type = 'info') {
             statusMsg.textContent = `Status: ${msg}`;
             statusMsg.className = 'status';
             if (type) statusMsg.classList.add(type);
+            debugLog(`Status: ${msg} (${type})`);
         }
 
         function setLoading(loading, msg = 'Memuat playlist...') {
@@ -364,6 +492,42 @@
             }
         }
 
+        function showError(msg, solution = '') {
+            videoErrorOverlay.classList.add('show');
+            errorMsg.textContent = msg;
+            if (solution) {
+                errorSolution.innerHTML = solution;
+                errorSolution.style.display = 'block';
+            } else {
+                errorSolution.style.display = 'none';
+            }
+        }
+
+        function hideError() {
+            videoErrorOverlay.classList.remove('show');
+        }
+
+        function checkProtocol(url) {
+            try {
+                const u = new URL(url);
+                const isSecure = u.protocol === 'https:';
+                protocolInfo.textContent = isSecure ? '🔒 HTTPS' : '🔓 HTTP';
+                protocolInfo.className = `protocol-info ${isSecure ? 'secure' : 'insecure'}`;
+                
+                // Cek Mixed Content
+                if (window.location.protocol === 'https:' && !isSecure) {
+                    warningBox.classList.add('show');
+                    warningText.textContent = `⚠️ Mixed Content: Halaman HTTPS mencoba memuat HTTP dari ${u.hostname}. Browser akan memblokir ini.`;
+                    return false;
+                } else {
+                    warningBox.classList.remove('show');
+                    return true;
+                }
+            } catch(e) {
+                return true;
+            }
+        }
+
         // --- Render playlist ---
         function renderPlaylist() {
             if (!tracks.length) {
@@ -398,6 +562,7 @@
                 item.addEventListener('click', function() {
                     const index = parseInt(this.dataset.index, 10);
                     if (!isNaN(index) && index >= 0 && index < tracks.length) {
+                        debugLog(`Klik track index ${index}`);
                         playTrack(index);
                     }
                 });
@@ -414,43 +579,95 @@
             const track = tracks[currentIndex];
             if (!track.file) {
                 setStatus('File tidak ditemukan untuk video ini', 'error');
+                showError('URL file kosong');
                 return;
             }
 
-            // Deteksi tipe video dari ekstensi
-            const fileExt = track.file.split('.').pop().toLowerCase();
-            let videoType = 'video/mp4';
-            if (fileExt === 'mkv') videoType = 'video/x-matroska';
-            else if (fileExt === 'avi') videoType = 'video/x-msvideo';
-            else if (fileExt === 'mov') videoType = 'video/quicktime';
-            else if (fileExt === 'webm') videoType = 'video/webm';
-            else if (fileExt === 'ogg') videoType = 'video/ogg';
-            else if (fileExt === 'm3u8') videoType = 'application/x-mpegURL';
-            else if (fileExt === 'ts') videoType = 'video/MP2T';
+            hideError();
+            let videoUrl = track.file;
+            
+            // Fix Mixed Content: jika halaman HTTPS dan video HTTP, coba ganti ke HTTPS
+            if (protocolFix && videoUrl.startsWith('http://')) {
+                videoUrl = videoUrl.replace('http://', 'https://');
+                debugLog(`Protocol fix: mengubah ke HTTPS: ${videoUrl}`);
+            }
 
-            video.src = track.file;
+            debugLog(`Memutar video: ${track.title}`, { url: videoUrl });
+            checkProtocol(videoUrl);
+
+            // Deteksi tipe video dari ekstensi
+            const fileExt = videoUrl.split('.').pop().split('?')[0].toLowerCase();
+            let videoType = 'video/mp4';
+            const mimeTypes = {
+                'mp4': 'video/mp4',
+                'mkv': 'video/x-matroska',
+                'avi': 'video/x-msvideo',
+                'mov': 'video/quicktime',
+                'webm': 'video/webm',
+                'ogg': 'video/ogg',
+                'ogv': 'video/ogg',
+                'm3u8': 'application/x-mpegURL',
+                'ts': 'video/MP2T',
+                'flv': 'video/x-flv',
+                'wmv': 'video/x-ms-wmv',
+                'mpg': 'video/mpeg',
+                'mpeg': 'video/mpeg'
+            };
+            videoType = mimeTypes[fileExt] || 'video/mp4';
+            debugLog(`Deteksi tipe video: ${fileExt} -> ${videoType}`);
+
+            // Set source
+            video.src = videoUrl;
+            video.type = videoType;
             video.load();
-            video.play().then(() => {
-                isPlaying = true;
-                playBtn.textContent = '⏸ Jeda';
-                setStatus(`Memutar: ${track.title || 'Tanpa judul'}`, 'success');
-                renderPlaylist();
-            }).catch(err => {
-                setStatus(`Gagal memutar: ${err.message}`, 'error');
-                isPlaying = false;
-                playBtn.textContent = '▶ Putar';
-            });
+
+            // Coba mainkan
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    isPlaying = true;
+                    playBtn.textContent = '⏸ Jeda';
+                    setStatus(`Memutar: ${track.title || 'Tanpa judul'}`, 'success');
+                    renderPlaylist();
+                    debugLog(`Berhasil memutar: ${track.title}`);
+                }).catch(err => {
+                    debugLog(`Gagal memutar: ${err.message}`, err);
+                    setStatus(`Gagal memutar: ${err.message}`, 'error');
+                    isPlaying = false;
+                    playBtn.textContent = '▶ Putar';
+                    
+                    let errorMsgText = err.message;
+                    let solutionText = '';
+                    
+                    // Cek jika error karena Mixed Content
+                    if (err.message.includes('mixed') || err.message.includes('insecure') || 
+                        err.message.includes('blocked') || err.message.includes('CORS')) {
+                        errorMsgText = '⚠️ Video diblokir karena kebijakan keamanan browser (Mixed Content)';
+                        solutionText = `
+                            💡 <strong>Solusi:</strong><br>
+                            1. Klik tombol <strong>"Coba Fix Mixed Content"</strong> di bawah<br>
+                            2. Atau akses halaman melalui <strong>HTTP</strong> (bukan HTTPS)<br>
+                            3. Atau gunakan browser yang mengizinkan mixed content<br>
+                            4. Install ekstensi seperti <strong>"Allow CORS"</strong> atau <strong>"Mixed Content Fix"</strong>
+                        `;
+                    }
+                    
+                    showError(errorMsgText, solutionText);
+                });
+            }
         }
 
         function nextTrack() {
             if (!tracks.length) return;
             const next = (currentIndex + 1) % tracks.length;
+            debugLog(`Next track: ${currentIndex} -> ${next}`);
             playTrack(next);
         }
 
         function prevTrack() {
             if (!tracks.length) return;
             const prev = (currentIndex - 1 + tracks.length) % tracks.length;
+            debugLog(`Prev track: ${currentIndex} -> ${prev}`);
             playTrack(prev);
         }
 
@@ -465,8 +682,10 @@
                         isPlaying = true;
                         playBtn.textContent = '⏸ Jeda';
                         setStatus(`Memutar: ${tracks[currentIndex]?.title || 'Video'}`, 'success');
+                        hideError();
                     }).catch(err => {
-                        setStatus('Gagal memutar', 'error');
+                        setStatus(`Gagal memutar: ${err.message}`, 'error');
+                        showError(`Gagal memutar: ${err.message}`);
                     });
                 } else {
                     playTrack(currentIndex);
@@ -498,6 +717,8 @@
             let currentTitle = '';
             let currentDuration = '';
 
+            debugLog(`Parsing M3U, ${lines.length} baris`);
+
             for (let line of lines) {
                 line = line.trim();
                 if (!line) continue;
@@ -513,6 +734,7 @@
                         currentTitle = '';
                         currentDuration = '';
                     }
+                    debugLog(`EXTINF: title="${currentTitle}", duration=${currentDuration}`);
                     continue;
                 }
 
@@ -528,10 +750,12 @@
                         file: line,
                         duration: currentDuration || ''
                     });
+                    debugLog(`Track added: ${currentTitle} -> ${line}`);
                     currentTitle = '';
                     currentDuration = '';
                 }
             }
+            debugLog(`Parsing selesai, ${result.length} track ditemukan`);
             return result;
         }
 
@@ -550,20 +774,27 @@
             enableControls(false);
             tracks = [];
             renderPlaylist();
+            hideError();
 
             try {
+                debugLog(`Memuat M3U dari: ${M3U_URL}`);
+                
                 const response = await fetch(M3U_URL, {
                     mode: 'cors',
                     headers: {
-                        'Accept': 'text/plain, application/x-mpegurl, audio/x-mpegurl'
+                        'Accept': 'text/plain, application/x-mpegurl, audio/x-mpegurl, */*'
                     }
                 });
+
+                debugLog(`Response status: ${response.status} ${response.statusText}`);
 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 const content = await response.text();
+                debugLog(`Content length: ${content.length} bytes`);
+
                 const parsed = parseM3U(content);
 
                 if (parsed.length) {
@@ -574,6 +805,11 @@
                     setStatus(`Berhasil memuat ${tracks.length} video dari server`, 'success');
                     
                     if (tracks.length > 0) {
+                        // Cek protocol dari video pertama
+                        if (tracks[0].file) {
+                            checkProtocol(tracks[0].file);
+                        }
+                        debugLog('Memutar track pertama');
                         playTrack(0);
                     }
                 } else {
@@ -581,6 +817,7 @@
                     enableControls(false);
                 }
             } catch (err) {
+                debugLog(`Error: ${err.message}`, err);
                 setStatus(`Gagal memuat: ${err.message}`, 'error');
                 console.error('Error loading M3U:', err);
                 enableControls(false);
@@ -595,12 +832,39 @@
             }
         }
 
+        // --- Fix Mixed Content ---
+        function toggleProtocolFix() {
+            protocolFix = !protocolFix;
+            fixMixedBtn.textContent = protocolFix ? '🔒 Fix: ON' : '🔓 Coba Fix Mixed Content';
+            fixMixedBtn.style.background = protocolFix ? '#51cf66' : '#e94560';
+            setStatus(`Protocol fix ${protocolFix ? 'diaktifkan' : 'dinonaktifkan'}`, 'warning');
+            debugLog(`Protocol fix: ${protocolFix ? 'ON' : 'OFF'}`);
+            
+            // Refresh current track dengan fix
+            if (tracks.length > 0 && currentIndex < tracks.length) {
+                playTrack(currentIndex);
+            }
+        }
+
         // --- Event listeners ---
         playBtn.addEventListener('click', togglePlay);
         nextBtn.addEventListener('click', nextTrack);
         prevBtn.addEventListener('click', prevTrack);
         refreshBtn.addEventListener('click', loadM3UFromServer);
         fullscreenBtn.addEventListener('click', toggleFullscreen);
+        fixMixedBtn.addEventListener('click', toggleProtocolFix);
+        
+        debugBtn.addEventListener('click', function() {
+            debugMode = !debugMode;
+            debugInfo.classList.toggle('show');
+            debugBtn.textContent = debugMode ? '🐛 Debug: ON' : '🐛 Debug';
+            if (debugMode) {
+                debugInfo.textContent = '=== DEBUG MODE ACTIVATED ===\n';
+                debugLog('Debug mode diaktifkan');
+                debugLog(`Protocol fix: ${protocolFix ? 'ON' : 'OFF'}`);
+                debugLog(`Halaman menggunakan: ${window.location.protocol}`);
+            }
+        });
 
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
@@ -629,6 +893,7 @@
 
         // Video events
         video.addEventListener('ended', function() {
+            debugLog('Video ended');
             if (tracks.length) {
                 nextTrack();
             } else {
@@ -641,6 +906,7 @@
         video.addEventListener('play', function() {
             isPlaying = true;
             playBtn.textContent = '⏸ Jeda';
+            hideError();
         });
         video.addEventListener('pause', function() {
             isPlaying = false;
@@ -648,13 +914,37 @@
         });
 
         video.addEventListener('error', function(e) {
-            setStatus(`Error video: ${e.target.error?.message || 'Tidak bisa memutar'}`, 'error');
+            const error = video.error;
+            let msg = 'Tidak bisa memutar video';
+            if (error) {
+                switch(error.code) {
+                    case 1: msg = 'MediaError: Pemutaran dibatalkan'; break;
+                    case 2: msg = 'MediaError: Jaringan error - mungkin CORS atau Mixed Content'; break;
+                    case 3: msg = 'MediaError: Decode error - format tidak didukung'; break;
+                    case 4: msg = 'MediaError: Sumber tidak ditemukan atau tidak didukung'; break;
+                }
+            }
+            debugLog(`Video error: ${msg}`, { error, src: video.src });
+            setStatus(`Error video: ${msg}`, 'error');
             isPlaying = false;
             playBtn.textContent = '▶ Putar';
+            
+            let solution = '';
+            if (msg.includes('Jaringan') || msg.includes('CORS') || msg.includes('Mixed')) {
+                solution = `
+                    💡 <strong>Solusi:</strong><br>
+                    1. Klik tombol <strong>"Coba Fix Mixed Content"</strong><br>
+                    2. Atau akses halaman melalui <strong>HTTP</strong><br>
+                    3. Atau install ekstensi <strong>"Allow CORS"</strong> di browser
+                `;
+            }
+            showError(msg, solution);
         });
 
         // --- Start ---
         window.addEventListener('load', function() {
+            debugLog('Halaman dimuat, memulai load M3U...');
+            debugLog(`Protokol halaman: ${window.location.protocol}`);
             loadM3UFromServer();
         });
 
