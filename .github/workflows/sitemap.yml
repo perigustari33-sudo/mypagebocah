@@ -21,9 +21,6 @@ jobs:
       uses: cicirello/generate-sitemap@v1
       with:
         base-url-path: https://celinebee.cc.cd/
-        # exclude-paths: # (Opsional) Tentukan file/folder yang diabaikan
-        #   - "404.html"
-        #   - "assets/"
          include-extension: # (Opsional) Format file yang dimasukkan
            - "html"
         #   - "md"
