@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Daftar Halaman - Celine Bee</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Index of /</title>
+ 
     <style>
         * {
             margin: 0;
@@ -12,270 +13,248 @@
         }
 
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
-            background: #f0f2f5;
+            background-color: #f0f2f5;
+            font-family: 'Segoe UI', 'Roboto', 'Lucida Grande', sans-serif;
+            padding: 2rem 1rem;
+            color: #1e2a3e;
         }
 
         .container {
+            max-width: 900px;
+            margin: 0 auto;
             background: white;
             border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.02);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
         }
 
-        h1 {
-            color: #1a1a2e;
-            font-size: 28px;
-            border-bottom: 4px solid #4CAF50;
-            padding-bottom: 15px;
-            margin-bottom: 10px;
+        .header {
+            background: #f8fafc;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 500;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            letter-spacing: -0.3px;
+            color: #0f172a;
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-
-        .subtitle {
-            color: #666;
-            margin-bottom: 25px;
-            font-size: 14px;
-        }
-
-        .stats {
-            background: #e8f5e9;
-            padding: 12px 20px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             flex-wrap: wrap;
         }
 
-        .stats span {
-            font-weight: bold;
-            color: #2e7d32;
+        .header h1 span {
+            background: #e9ecef;
+            font-size: 0.8rem;
+            font-weight: normal;
+            padding: 2px 10px;
+            border-radius: 30px;
+            color: #2c3e66;
         }
 
-        .loading {
-            text-align: center;
-            padding: 40px 0;
-            color: #666;
+        .parent-link {
+            background: #fef9e3;
+            border-left: 4px solid #eab308;
+            padding: 0.7rem 1.5rem;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #f1f5f9;
         }
 
-        .loading::after {
-            content: '⏳';
-            display: inline-block;
-            animation: spin 1s linear infinite;
-            margin-left: 8px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        #link-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        #link-list li {
-            background: #f8f9fa;
-            margin: 6px 0;
-            padding: 12px 18px;
-            border-radius: 8px;
-            border-left: 4px solid transparent;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-        }
-
-        #link-list li:hover {
-            background: #e8f5e9;
-            border-left-color: #4CAF50;
-            transform: translateX(6px);
-        }
-
-        #link-list li .icon {
-            margin-right: 12px;
-            font-size: 18px;
-            color: #4CAF50;
-        }
-
-        #link-list a {
+        .parent-link a {
             text-decoration: none;
-            color: #1a1a2e;
             font-weight: 500;
-            flex: 1;
+            color: #b45309;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .parent-link a:hover {
+            text-decoration: underline;
+            color: #9a3412;
+        }
+
+        .file-list {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .file-list th {
+            text-align: left;
+            padding: 0.9rem 1.5rem;
+            background-color: #f1f5f9;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #475569;
+            border-bottom: 1px solid #cbd5e1;
+        }
+
+        .file-list td {
+            padding: 0.8rem 1.5rem;
+            border-bottom: 1px solid #eef2ff;
+            font-size: 0.9rem;
+            vertical-align: middle;
+        }
+
+        .file-list tr:hover td {
+            background-color: #fafcff;
+        }
+
+        .file-icon {
+            font-family: monospace;
+            font-size: 1.2rem;
+            padding-right: 8px;
+        }
+
+        .folder-name a {
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: 500;
             word-break: break-all;
         }
 
-        #link-list a:hover {
-            color: #4CAF50;
+        .folder-name a:hover {
+            text-decoration: underline;
+            color: #1e40af;
         }
 
-        #link-list .badge {
-            background: #ddd;
-            font-size: 11px;
-            padding: 2px 10px;
-            border-radius: 12px;
-            color: #555;
-            margin-left: 10px;
+        .file-size {
+            color: #4b5563;
+            font-family: monospace;
+            font-size: 0.8rem;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .date {
+            color: #5b6e8c;
+            font-size: 0.75rem;
+            font-family: monospace;
             white-space: nowrap;
         }
 
         .footer {
-            margin-top: 30px;
-            text-align: center;
-            color: #999;
-            font-size: 13px;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
+            background: #f9fafb;
+            padding: 0.8rem 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.7rem;
+            color: #62748c;
+            text-align: right;
+            font-family: monospace;
         }
 
-        .error-msg {
-            background: #ffebee;
-            color: #c62828;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
+        .description {
+            padding: 1rem 1.5rem;
+            background: #f0fdf4;
+            border-bottom: 1px solid #dcfce7;
+            font-size: 0.85rem;
+            color: #166534;
         }
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
+        @media (max-width: 680px) {
+            .file-list th, .file-list td {
+                padding: 0.6rem 0.8rem;
             }
-            h1 {
-                font-size: 20px;
+            .file-size, .date {
+                font-size: 0.7rem;
             }
-            #link-list li {
-                padding: 10px 14px;
-                flex-wrap: wrap;
-            }
-            #link-list .badge {
-                margin-left: 0;
-                margin-top: 5px;
+            .header h1 {
+                font-size: 1.1rem;
             }
         }
     </style>
 </head>
 <body>
-
-    <div class="container">
-        <h1>📄 Daftar Semua Halaman</h1>
-        <p class="subtitle">Daftar lengkap semua halaman yang tersedia di situs ini</p>
-
-        <div class="stats">
-            <span id="total-count">⏳ Memuat...</span>
-            <span>🔄 Data dari database</span>
-        </div>
-
-        <div id="loading" class="loading">Memuat daftar halaman...</div>
-
-        <ul id="link-list"></ul>
-
-        <div class="footer">
-            ⚡ Diperbarui otomatis dari <code>sitemap.xml</code>
-        </div>
+<div class="container">
+    <div class="header">
+        <h1>
+            Index of /
+            <span>~ 1 item</span>
+        </h1>
     </div>
 
-    <script>
-        /**
-         * Mengambil sitemap.xml, membaca semua URL, dan menampilkannya sebagai daftar link
-         */
-        async function loadSitemap() {
-            const listContainer = document.getElementById('link-list');
-            const loadingEl = document.getElementById('loading');
-            const totalEl = document.getElementById('total-count');
+    <!-- Parent directory (tidak bisa di atas root) -->
+    <div class="parent-link">
+        📁 <a href="#" id="parentLink">../</a> (Parent Directory - Root)
+    </div>
 
-            try {
-                // 1. Ambil file sitemap.xml
-                const response = await fetch('/sitemap.xml');
+    <div class="description">
+        ⚡ Welcome to root directory. Klik folder <strong>document/</strong> untuk melihat daftar file video.
+    </div>
 
-                if (!response.ok) {
-                    throw new Error(`Gagal mengambil sitemap.xml (HTTP ${response.status})`);
-                }
+    <table class="file-list">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th class="date">Last modified</th>
+                <th class="file-size">Size</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Folder document mengarah ke https://celinebee.cc.cd/document/index.html -->
+            <tr>
+                <td class="folder-name">
+                    <span class="file-icon">📁</span>
+                    <a href="#" id="documentFolderLink">
+                        document/
+                    </a>
+                </td>
+                <td class="date" id="folderDate">-</td>
+                <td class="file-size">-</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="footer">
+        Apache/2.4.41 (Ubuntu) Server at celinebee.cc.cd Port 80
+    </div>
+</div>
 
-                const xmlText = await response.text();
-
-                // 2. Parse XML
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-
-                // 3. Ambil semua tag <loc>
-                const locElements = xmlDoc.getElementsByTagName('loc');
-                const urls = [];
-
-                for (let i = 0; i < locElements.length; i++) {
-                    const url = locElements[i].textContent.trim();
-                    if (url) {
-                        urls.push(url);
-                    }
-                }
-
-                // 4. Hapus loading
-                loadingEl.style.display = 'none';
-
-                // 5. Jika tidak ada URL
-                if (urls.length === 0) {
-                    listContainer.innerHTML =
-                        '<li style="text-align:center;color:#999;padding:20px;">Tidak ada halaman ditemukan di sitemap.</li>';
-                    totalEl.textContent = '0 halaman';
-                    return;
-                }
-
-                // 6. Tampilkan total
-                totalEl.textContent = `${urls.length} halaman`;
-
-                // 7. Buat daftar link
-                urls.forEach((url, index) => {
-                    const li = document.createElement('li');
-
-                    // Icon
-                    const icon = document.createElement('span');
-                    icon.className = 'icon';
-                    icon.textContent = '📄';
-                    li.appendChild(icon);
-
-                    // Link
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.textContent = url.replace(/^https?:\/\/[^\/]+/, '');
-                    a.target = '_blank';
-                    li.appendChild(a);
-
-                    // Badge (nomor urut)
-                    const badge = document.createElement('span');
-                    badge.className = 'badge';
-                    badge.textContent = `#${index + 1}`;
-                    li.appendChild(badge);
-
-                    listContainer.appendChild(li);
-                });
-
-            } catch (error) {
-                // Error handling
-                loadingEl.style.display = 'none';
-                listContainer.innerHTML = `
-                            <li class="error-msg">
-                                ❌ ${error.message}
-                                <br><br>
-                                <small style="display:block;font-weight:normal;">
-                                    Pastikan file <code>sitemap.xml</code> ada di root situs.
-                                </small>
-                            </li>
-                        `;
-                totalEl.textContent = '⚠️ Gagal memuat';
-                console.error('Error loading sitemap:', error);
-            }
-        }
-
-        // Jalankan fungsi saat halaman selesai dimuat
-        document.addEventListener('DOMContentLoaded', loadSitemap);
-    </script>
-
+<script>
+    // Fungsi untuk mendapatkan tanggal kemarin (hari ini dikurang 1 hari)
+    function getYesterdayDate() {
+        const today = new Date();
+        today.setDate(today.getDate() - 1);
+        
+        const tahun = today.getFullYear();
+        const bulan = String(today.getMonth() + 1).padStart(2, '0');
+        const hari = String(today.getDate()).padStart(2, '0');
+        
+        // Format: YYYY-MM-DD HH:MM (format seperti listing direktori)
+        const jam = String(today.getHours()).padStart(2, '0');
+        const menit = String(today.getMinutes()).padStart(2, '0');
+        
+        return `${tahun}-${bulan}-${hari} ${jam}:${menit}`;
+    }
+    
+    // Terapkan tanggal kemarin untuk folder document
+    const yesterday = getYesterdayDate();
+    document.getElementById('folderDate').innerText = yesterday;
+    
+    // Folder document mengarah ke https://celinebee.cc.cd/document/index.html
+    // Menggunakan location.href (bukan window.open)
+    const folderLink = document.getElementById('documentFolderLink');
+    if(folderLink) {
+        folderLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            location.href = 'https://celinebee.cc.cd/document/index.html';
+        });
+    }
+    
+    // Parent directory tetap di halaman root (tidak ada aksi karena sudah di root)
+    const parentBtn = document.getElementById('parentLink');
+    if(parentBtn) {
+        parentBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Tetap di halaman root (refresh atau tidak melakukan apa-apa)
+            // Bisa juga menampilkan alert
+            alert('Anda berada di root directory. Tidak ada parent di atas ini.');
+        });
+    }
+</script>
 </body>
 </html>
