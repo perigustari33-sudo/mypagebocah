@@ -4,42 +4,43 @@ on:
   push:
     branches: [ main ] # Workflow berjalan setiap ada push ke branch main
   workflow_dispatch: # (Opsional) Memungkinkan menjalankan workflow manual
+
 permissions:
-  contents: write 
+  contents: write
+
 jobs:
   sitemap_job:
     runs-on: ubuntu-latest
     name: Generate a sitemap
     steps:
-    - name: Checkout repositori
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0 # Diperlukan untuk mendapatkan tanggal commit
+      - name: Checkout repositori
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Diperlukan untuk mendapatkan tanggal commit
 
-    - name: Generate sitemap
-      id: sitemap
-      uses: cicirello/generate-sitemap@v1
-      with:
-        base-url-path: https://celinebee.cc.cd/
-         include-extension: # (Opsional) Format file yang dimasukkan
-           - "html"
-        #   - "md"
+      - name: Generate sitemap
+        id: sitemap
+        uses: cicirello/generate-sitemap@v1
+        with:
+          base-url-path: https://celinebee.cc.cd/
+          include-extension:
+            "html"
 
-    - name: Commit dan push sitemap ke repositori
-      run: |
-        # Mengonfigurasi identitas git
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        
-        # Menambahkan file sitemap.xml ke staging
-        git add sitemap.xml
-        
-        # Cek apakah ada perubahan pada sitemap.xml
-        if git diff --staged --quiet; then
-          echo "Tidak ada perubahan pada sitemap.xml"
-        else
-          # Commit dan push perubahan
-          git commit -m "Perbarui sitemap.xml secara otomatis [skip ci]"
-          git push origin main
-          echo "sitemap.xml berhasil diperbarui!"
-        fi
+      - name: Commit dan push sitemap ke repositori
+        run: |
+          # Mengonfigurasi identitas git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Menambahkan file sitemap.xml ke staging
+          git add sitemap.xml
+          
+          # Cek apakah ada perubahan pada sitemap.xml
+          if git diff --staged --quiet; then
+            echo "Tidak ada perubahan pada sitemap.xml"
+          else
+            # Commit dan push perubahan
+            git commit -m "Perbarui sitemap.xml secara otomatis [skip ci]"
+            git push origin main
+            echo "sitemap.xml berhasil diperbarui!"
+          fi
