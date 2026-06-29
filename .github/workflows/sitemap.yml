@@ -4,7 +4,8 @@ on:
   push:
     branches: [ main ] # Workflow berjalan setiap ada push ke branch main
   workflow_dispatch: # (Opsional) Memungkinkan menjalankan workflow manual
-
+permissions:
+  contents: write 
 jobs:
   sitemap_job:
     runs-on: ubuntu-latest
