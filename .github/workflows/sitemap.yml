@@ -24,8 +24,8 @@ jobs:
         # exclude-paths: # (Opsional) Tentukan file/folder yang diabaikan
         #   - "404.html"
         #   - "assets/"
-        # include-extension: # (Opsional) Format file yang dimasukkan
-        #   - "html"
+         include-extension: # (Opsional) Format file yang dimasukkan
+           - "html"
         #   - "md"
 
     - name: Commit dan push sitemap ke repositori
