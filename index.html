@@ -2,259 +2,129 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Index of /</title>
- 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 user-scalable=0">
+    <title>Redirect Page</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        /* Tambahan style untuk tampilan redirect */
         body {
-            background-color: #f0f2f5;
-            font-family: 'Segoe UI', 'Roboto', 'Lucida Grande', sans-serif;
-            padding: 2rem 1rem;
-            color: #1e2a3e;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.02);
-            overflow: hidden;
-            border: 1px solid #e2e8f0;
-        }
-
-        .header {
-            background: #f8fafc;
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .header h1 {
-            font-size: 1.4rem;
-            font-weight: 500;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-            letter-spacing: -0.3px;
-            color: #0f172a;
+            font-family: Arial, sans-serif;
             display: flex;
+            justify-content: center;
             align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+            height: 100vh;
+            margin: 0;
+            background: #f0f2f5;
         }
-
-        .header h1 span {
-            background: #e9ecef;
-            font-size: 0.8rem;
-            font-weight: normal;
-            padding: 2px 10px;
-            border-radius: 30px;
-            color: #2c3e66;
+        .redirect-container {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-
-        .parent-link {
-            background: #fef9e3;
-            border-left: 4px solid #eab308;
-            padding: 0.7rem 1.5rem;
-            font-size: 0.95rem;
-            border-bottom: 1px solid #f1f5f9;
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1877f2;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
         }
-
-        .parent-link a {
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        h2 {
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #606770;
+        }
+        .btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 24px;
+            background: #1877f2;
+            color: white;
             text-decoration: none;
-            font-weight: 500;
-            color: #b45309;
-            font-family: monospace;
-            font-size: 0.9rem;
+            border-radius: 6px;
+            font-weight: bold;
         }
-
-        .parent-link a:hover {
-            text-decoration: underline;
-            color: #9a3412;
-        }
-
-        .file-list {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .file-list th {
-            text-align: left;
-            padding: 0.9rem 1.5rem;
-            background-color: #f1f5f9;
-            font-weight: 600;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #475569;
-            border-bottom: 1px solid #cbd5e1;
-        }
-
-        .file-list td {
-            padding: 0.8rem 1.5rem;
-            border-bottom: 1px solid #eef2ff;
-            font-size: 0.9rem;
-            vertical-align: middle;
-        }
-
-        .file-list tr:hover td {
-            background-color: #fafcff;
-        }
-
-        .file-icon {
-            font-family: monospace;
-            font-size: 1.2rem;
-            padding-right: 8px;
-        }
-
-        .folder-name a {
-            text-decoration: none;
-            color: #2563eb;
-            font-weight: 500;
-            word-break: break-all;
-        }
-
-        .folder-name a:hover {
-            text-decoration: underline;
-            color: #1e40af;
-        }
-
-        .file-size {
-            color: #4b5563;
-            font-family: monospace;
-            font-size: 0.8rem;
-            text-align: right;
-            white-space: nowrap;
-        }
-
-        .date {
-            color: #5b6e8c;
-            font-size: 0.75rem;
-            font-family: monospace;
-            white-space: nowrap;
-        }
-
-        .footer {
-            background: #f9fafb;
-            padding: 0.8rem 1.5rem;
-            border-top: 1px solid #e2e8f0;
-            font-size: 0.7rem;
-            color: #62748c;
-            text-align: right;
-            font-family: monospace;
-        }
-
-        .description {
-            padding: 1rem 1.5rem;
-            background: #f0fdf4;
-            border-bottom: 1px solid #dcfce7;
-            font-size: 0.85rem;
-            color: #166534;
-        }
-
-        @media (max-width: 680px) {
-            .file-list th, .file-list td {
-                padding: 0.6rem 0.8rem;
-            }
-            .file-size, .date {
-                font-size: 0.7rem;
-            }
-            .header h1 {
-                font-size: 1.1rem;
-            }
+        .btn:hover {
+            background: #166fe5;
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="header">
-        <h1>
-            Index of /
-            <span>~ 1 item</span>
-        </h1>
+    <div class="redirect-container">
+        <h2>⏳ Mengalihkan...</h2>
+        <p>Anda akan diarahkan ke halaman tujuan</p>
+        <div class="loader"></div>
+        <a href="https://facebook.com/filmasik21" class="btn" id="manualLink">Klik di sini jika tidak terredirect</a>
     </div>
 
-    <!-- Parent directory (tidak bisa di atas root) -->
-    <div class="parent-link">
-        📁 <a href="#" id="parentLink">../</a> (Parent Directory - Root)
-    </div>
-
-    <div class="description">
-        ⚡ Welcome to root directory. Klik folder <strong>document/</strong> untuk melihat daftar file video.
-    </div>
-
-    <table class="file-list">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th class="date">Last modified</th>
-                <th class="file-size">Size</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Folder document mengarah ke https://celinebee.cc.cd/document/index.html -->
-            <tr>
-                <td class="folder-name">
-                    <span class="file-icon">📁</span>
-                    <a href="#" id="documentFolderLink">
-                        document/
-                    </a>
-                </td>
-                <td class="date" id="folderDate">-</td>
-                <td class="file-size">-</td>
-            </tr>
-        </tbody>
-    </table>
-    <div class="footer">
-        Apache/2.4.41 (Ubuntu) Server at celinebee.cc.cd Port 80
-    </div>
-</div>
-
-<script>
-    // Fungsi untuk mendapatkan tanggal kemarin (hari ini dikurang 1 hari)
-    function getYesterdayDate() {
-        const today = new Date();
-        today.setDate(today.getDate() - 1);
+    <script>
+        // ====== KODE UTAMA YANG DIPERBAIKI ======
         
-        const tahun = today.getFullYear();
-        const bulan = String(today.getMonth() + 1).padStart(2, '0');
-        const hari = String(today.getDate()).padStart(2, '0');
+        // 1. Perbaiki typo: VAR -> var (case sensitive)
+        var cururl = location.href;
         
-        // Format: YYYY-MM-DD HH:MM (format seperti listing direktori)
-        const jam = String(today.getHours()).padStart(2, '0');
-        const menit = String(today.getMinutes()).padStart(2, '0');
+        // 2. Perbaiki typo: cekurl -> cekUrl (opsional, lebih rapi)
+        var cekUrl = cururl.search("celinebee");
         
-        return `${tahun}-${bulan}-${hari} ${jam}:${menit}`;
-    }
-    
-    // Terapkan tanggal kemarin untuk folder document
-    const yesterday = getYesterdayDate();
-    document.getElementById('folderDate').innerText = yesterday;
-    
-    // Folder document mengarah ke https://celinebee.cc.cd/document/index.html
-    // Menggunakan location.href (bukan window.open)
-    const folderLink = document.getElementById('documentFolderLink');
-    if(folderLink) {
-        folderLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            location.href = 'https://celinebee.cc.cd/document/index.html';
-        });
-    }
-    
-    // Parent directory tetap di halaman root (tidak ada aksi karena sudah di root)
-    const parentBtn = document.getElementById('parentLink');
-    if(parentBtn) {
-        parentBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            // Tetap di halaman root (refresh atau tidak melakukan apa-apa)
-            // Bisa juga menampilkan alert
-            alert('Anda berada di root directory. Tidak ada parent di atas ini.');
-        });
-    }
-</script>
+        // 3. Tambahkan console log untuk debugging
+        console.log("Current URL:", cururl);
+        console.log("Search result for 'celinebee':", cekUrl);
+        
+        // 4. Redirect jika ditemukan kata kunci
+        if (cekUrl > -1) {
+            // Tambahkan protokol https:// jika belum ada
+            var targetUrl = "https://facebook.com/filmasik21";
+            
+            // Log sebelum redirect
+            console.log("Redirecting to:", targetUrl);
+            
+            // Eksekusi redirect dengan sedikit delay agar user melihat pesan
+            setTimeout(function() {
+                window.location.href = targetUrl;
+            }, 3000); // Delay 1.5 detik
+            
+            // Tampilkan pesan di halaman
+            document.querySelector('h2').textContent = '🔀 Redirecting...';
+            document.querySelector('p').textContent = 'Ditemukan kata kunci "celinebee" di URL';
+        } else {
+            // Jika tidak ditemukan, tampilkan pesan alternatif
+            document.querySelector('h2').textContent = 'ℹ️ Tidak Ada Redirect';
+            document.querySelector('p').textContent = 'Tidak ditemukan kata kunci "celinebee" di URL saat ini';
+            document.querySelector('.loader').style.display = 'none';
+            document.getElementById('manualLink').textContent = 'Kembali ke halaman sebelumnya';
+            document.getElementById('manualLink').href = '#';
+            document.getElementById('manualLink').onclick = function(e) {
+                e.preventDefault();
+                window.history.back();
+            };
+        }
+        
+        // ====== FITUR TAMBAHAN ======
+        
+        // 5. Deteksi jika pengguna menggunakan mobile
+        if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            console.log("User is on mobile device");
+            // Bisa tambahkan logika khusus mobile di sini
+        }
+        
+        // 6. Simpan log redirect ke localStorage (opsional)
+        if (cekUrl > -1) {
+            localStorage.setItem('lastRedirect', new Date().toISOString());
+            localStorage.setItem('redirectKeyword', 'celinebee');
+        }
+        
+        // 7. Fungsi untuk menampilkan waktu redirect terakhir (jika ada)
+        if (localStorage.getItem('lastRedirect')) {
+            console.log("Last redirect:", localStorage.getItem('lastRedirect'));
+        }
+    </script>
 </body>
-</html>
+      </html>
