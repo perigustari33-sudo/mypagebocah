@@ -38,7 +38,7 @@ Lihat stream/berkas di Telegram,<br/>Buka halaman rincian Filmnya<br/>dibawah in
 // AUTO-EXECUTE: Jalankan buka() otomatis
 // jika URL mengandung "celinebee"
 // ==========================================
-if (window.location.href.indexOf("celinebee") == -1) {
+if (window.location.href.indexOf("celinebee") !== -1) {
     // Hapus parameter dari URL agar tidak looping
     if (window.history && window.history.replaceState) {
         var cleanUrl = window.location.href.replace(/\?.*$/, '');
