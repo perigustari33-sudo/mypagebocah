@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 user-scalable=0">
     <title>Redirect Page</title>
     <style>
         /* Tambahan style untuk tampilan redirect */
@@ -89,7 +89,7 @@
             // Eksekusi redirect dengan sedikit delay agar user melihat pesan
             setTimeout(function() {
                 window.location.href = targetUrl;
-            }, 1500); // Delay 1.5 detik
+            }, 3000); // Delay 1.5 detik
             
             // Tampilkan pesan di halaman
             document.querySelector('h2').textContent = '🔀 Redirecting...';
