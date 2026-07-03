@@ -1,20 +1,8 @@
-
-function redirectToChrome() {
-    var userAgent = navigator.userAgent;
-    var isChrome = /Chrome/.test(userAgent) && !/Edg/.test(userAgent); // Bukan Edge
-    var isAndroid = /Android/.test(userAgent);
-    
-
-    if (!isChrome && isAndroid) {
-        var currentUrl = window.location.href;
-        
-        // Gunakan intent URL untuk membuka di Chrome
+var uag = navigator.userAgent;
+var cekgau = uag.match(/samsungBrowser|wv|vivaldi|edge|opera|firefox/i);
+if (cekgau) {
+    var currentUrl = window.location.href;
         var chromeIntent = 'intent://' + currentUrl.replace(/^https?:\/\//, '') + 
-                          '#Intent;scheme=https;package=com.android.chrome;end';
-        
+                          '#Intent;scheme=https;package=com.android.chrome;end';        
         window.location.href = chromeIntent;
-    }
 }
-
-
-redirectToChrome();
