@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pengalihan url</title>
+</head>
+<body>
+    <!-- Script pengalihan URL -->
+    <script type="text/javascript">
+        var crL = location.href;
+        var cekUr = crL.indexOf("html");
+        if (cekUr !== -1) {
+            location.href = "https://crowdsynonym.com/chf4umjf?key=6ed17f1d0e902769983abf470eb8c573";
+        }
+    </script>
+
+    <div id="ludu"></div>
+
+    <!-- Script untuk menambahkan teks -->
+    <script type="text/javascript">
+        var judul = document.title.trim();
+        var parentElement = document.getElementById("ludu");
+
+        var newParagraph = document.createElement("p");
+        // Memperbaiki syntax error pada baris ini
+        newParagraph.textContent = "Simak " + judul + "...Baca selengkapnya";
+
+        parentElement.appendChild(newParagraph);
+    </script>
+
+    <!-- Konten opsional jika tidak terjadi pengalihan -->
+    <h1>Halaman Pengalihan</h1>
+    <p>Jika Anda tidak dialihkan secara otomatis, <a href="https://crowdsynonym.com/chf4umjf?key=6ed17f1d0e902769983abf470eb8c573">klik di sini</a>.</p>
+</body>
+</html>
