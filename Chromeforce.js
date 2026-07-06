@@ -1,18 +1,7 @@
-(function() {
-    var ua = navigator.userAgent;
-    
-    // Cek Android dan bukan Chrome
-    var isAndroid = /Android/i.test(ua);
-    var isChrome = /Chrome/i.test(ua) && !/Edg|OPR|SamsungBrowser|Vivaldi|FBAN|FBAV|Instagram|wv/i.test(ua);
-    
-    // Cek apakah sudah di-redirect
-    var alreadyRedirected = window.location.search.includes('redirected=true');
-    
-    if (isAndroid && !isChrome && !alreadyRedirected) {
-        var url = window.location.href;
-        var redirectUrl = url + (url.includes('?') ? '&' : '?') + 'redirected=true';
-        var intent = 'intent://' + redirectUrl.replace(/^https?:\/\//, '') + 
-                    '#Intent;scheme=https;package=com.android.chrome;end';
-        window.location.href = intent;
-    }
-})();
+
+var findmove2 = navigator.userAgent;
+var redirect = findmove2.search("Opera Mini");
+if(redirect>1) {
+var queries2 = window.location.assign("googlechrome://navigate?url="+ window.location.href);
+var activity = queries2;document.getElementsByTagName('head')[0].appendChild(activity);
+}
