@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Pemutar Stream FWC 2026</title>
+    <title>Pemutar Stream HLS</title>
 
     <!-- HLS.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
     <style>
-        /* Reset & Fullscreen */
         * {
             margin: 0;
             padding: 0;
@@ -36,11 +35,10 @@
             border: 1px solid #2a2a2a;
         }
 
-        /* Container video - rasio 16:9 */
         .video-container {
             position: relative;
             width: 100%;
-            padding-bottom: 56.25%; /* 16:9 */
+            padding-bottom: 56.25%;
             background: #000;
             overflow: hidden;
         }
@@ -55,7 +53,6 @@
             display: block;
         }
 
-        /* Info & Status */
         .info-bar {
             padding: 16px 20px;
             background: #141414;
@@ -165,7 +162,51 @@
             border-color: #c9302c;
         }
 
-        /* Responsif */
+        .btn-warning {
+            background: #f0ad4e;
+            border-color: #f0ad4e;
+            color: #fff;
+        }
+
+        .btn-warning:hover {
+            background: #ec971f;
+            border-color: #ec971f;
+        }
+
+        .debug-panel {
+            padding: 12px 20px;
+            background: #0d0d0d;
+            border-top: 1px solid #222;
+            font-size: 12px;
+            color: #666;
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            display: none;
+        }
+
+        .debug-panel.show {
+            display: block;
+        }
+
+        .debug-panel .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid #1a1a1a;
+            color: #888;
+        }
+
+        .debug-panel .log-entry.error {
+            color: #d9534f;
+        }
+
+        .debug-panel .log-entry.success {
+            color: #5cb85c;
+        }
+
+        .debug-panel .log-entry.info {
+            color: #5bc0de;
+        }
+
         @media (max-width: 600px) {
             .info-bar {
                 flex-direction: column;
@@ -191,16 +232,14 @@
 <body>
 
     <div class="player-wrapper">
-        <!-- Video -->
         <div class="video-container">
             <video id="video" controls playsinline></video>
         </div>
 
-        <!-- Control Bar -->
         <div class="info-bar">
             <div class="status">
                 <span class="dot" id="statusDot"></span>
-                <span class="status-text" id="statusText">Memuat...</span>
+                <span class="status-text" id="statusText">Siap...</span>
             </div>
 
             <div class="url-label" id="urlDisplay">📡 celinebee.cc.cd</div>
@@ -208,8 +247,13 @@
             <div class="btn-group">
                 <button class="btn btn-primary" id="btnPlay">▶ Putar</button>
                 <button class="btn btn-danger" id="btnStop">⏹ Stop</button>
-                <button class="btn" id="btnReload">⟳ Reload</button>
+                <button class="btn btn-warning" id="btnReload">⟳ Reload</button>
+                <button class="btn" id="btnDebug">🐞 Debug</button>
             </div>
+        </div>
+
+        <div class="debug-panel" id="debugPanel">
+            <div id="logContainer"></div>
         </div>
     </div>
 
@@ -217,195 +261,353 @@
         (function() {
             'use strict';
 
-            // ---------- URL STREAM (LANGSUNG DARI ANDA) ----------
             const STREAM_URL = 'https://celinebee.cc.cd/document/sports.m3u';
-            // -----------------------------------------------------
 
             const video = document.getElementById('video');
             const statusDot = document.getElementById('statusDot');
             const statusText = document.getElementById('statusText');
             const urlDisplay = document.getElementById('urlDisplay');
+            const debugPanel = document.getElementById('debugPanel');
+            const logContainer = document.getElementById('logContainer');
 
             let hls = null;
             let isPlaying = false;
+            let debugMode = false;
+            let retryCount = 0;
+            const MAX_RETRIES = 3;
 
-            // Utility: set status
+            // ---------- LOGGING ----------
+            function log(msg, type = 'info') {
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                const time = new Date().toLocaleTimeString();
+                entry.textContent = `[${time}] ${msg}`;
+                logContainer.appendChild(entry);
+                logContainer.scrollTop = logContainer.scrollHeight;
+                console.log(`[${type.toUpperCase()}] ${msg}`);
+            }
+
             function setStatus(type, msg) {
                 statusDot.className = 'dot';
                 if (type) statusDot.classList.add(type);
                 statusText.textContent = msg || '—';
+                if (debugMode) log(`Status: ${msg}`, type || 'info');
             }
 
-            // Hentikan & bersihkan HLS
+            // ---------- CORS PROXY ----------
+            function getProxiedUrl(url) {
+                // Coba beberapa proxy jika CORS bermasalah
+                const proxies = [
+                    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                ];
+                // Kembalikan URL asli dulu, proxy hanya jika diperlukan
+                return url;
+            }
+
+            // ---------- DESTROY HLS ----------
             function destroyHls() {
                 if (hls) {
                     try {
                         hls.destroy();
-                    } catch (_) {}
+                        log('HLS destroyed', 'info');
+                    } catch (e) {
+                        log('Error destroying HLS: ' + e.message, 'error');
+                    }
                     hls = null;
                 }
-                // Jangan hapus src video agar tetap ada frame terakhir
                 isPlaying = false;
             }
 
-            // Load stream menggunakan HLS.js
+            // ---------- LOAD STREAM with HLS.js ----------
             function loadStream() {
-                // Stop sebelumnya
                 destroyHls();
 
-                // Reset video
                 video.removeAttribute('src');
                 video.load();
 
                 setStatus('loading', 'Memuat stream...');
+                log('Memuat: ' + STREAM_URL, 'info');
 
-                // Cek dukungan native HLS (Safari)
+                // CEK NATIVE HLS (Safari/iOS)
                 if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    // Native HLS (Safari, iOS)
+                    log('Menggunakan native HLS (Safari)', 'info');
                     video.src = STREAM_URL;
-                    video.play().then(() => {
-                        isPlaying = true;
-                        setStatus('playing', '▶ Putar (Native HLS)');
-                    }).catch((err) => {
-                        setStatus('error', 'Gagal main native: ' + err.message);
-                        console.error('Native HLS error:', err);
-                    });
+                    video.play()
+                        .then(() => {
+                            isPlaying = true;
+                            setStatus('playing', '▶ Native HLS');
+                            log('Native HLS berjalan', 'success');
+                        })
+                        .catch((err) => {
+                            setStatus('error', 'Native HLS gagal');
+                            log('Native HLS error: ' + err.message, 'error');
+                            // Fallback ke hls.js
+                            loadWithHlsJs();
+                        });
                     return;
                 }
 
-                // Gunakan HLS.js untuk browser lain
+                loadWithHlsJs();
+            }
+
+            function loadWithHlsJs() {
                 if (!Hls.isSupported()) {
-                    setStatus('error', '⚠ Browser tidak mendukung HLS');
+                    setStatus('error', '⚠ HLS tidak didukung');
+                    log('HLS tidak didukung browser ini', 'error');
                     return;
                 }
+
+                log('Menggunakan HLS.js', 'info');
 
                 hls = new Hls({
                     enableWorker: true,
                     lowLatencyMode: true,
                     backbufferLength: 30,
                     maxBufferLength: 30,
+                    xhrSetup: function(xhr, url) {
+                        // Tambahkan header untuk mengatasi CORS
+                        xhr.withCredentials = false;
+                        // Set custom user-agent agar server mengizinkan
+                        xhr.setRequestHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+                        xhr.setRequestHeader('Origin', window.location.origin);
+                        // Allow any response
+                        xhr.onreadystatechange = function() {
+                            if (xhr.readyState === 4) {
+                                log('XHR status: ' + xhr.status + ' untuk ' + url.substring(0, 60), 'info');
+                            }
+                        };
+                    },
+                    // Coba tanpa CORS strict
+                    fetchSetup: function(context, initParams) {
+                        // Override fetch untuk menangani CORS
+                        return fetch(context.url, {
+                            ...initParams,
+                            mode: 'cors',
+                            credentials: 'omit',
+                            headers: {
+                                ...initParams.headers,
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                            }
+                        });
+                    }
                 });
 
-                hls.loadSource(STREAM_URL);
-                hls.attachMedia(video);
-
+                // Event listeners
                 hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    video.play().then(() => {
-                        isPlaying = true;
-                        setStatus('playing', '▶ Putar (HLS.js)');
-                    }).catch((err) => {
-                        setStatus('error', 'Gagal play: ' + err.message);
-                        console.warn('Play error:', err);
-                    });
+                    log('Manifest berhasil diparsing', 'success');
+                    video.play()
+                        .then(() => {
+                            isPlaying = true;
+                            setStatus('playing', '▶ HLS.js');
+                            log('Video mulai diputar', 'success');
+                            retryCount = 0;
+                        })
+                        .catch((err) => {
+                            setStatus('error', 'Gagal play: ' + err.message);
+                            log('Play error: ' + err.message, 'error');
+                        });
+                });
+
+                hls.on(Hls.Events.LEVEL_LOADED, function(event, data) {
+                    log('Level loaded: ' + (data.level ? data.level.url : 'unknown'), 'info');
+                });
+
+                hls.on(Hls.Events.FRAG_LOADED, function(event, data) {
+                    log('Fragment loaded: ' + data.frag.sn, 'info');
                 });
 
                 hls.on(Hls.Events.ERROR, function(event, data) {
+                    log('HLS Error: ' + data.details + ' - ' + (data.error || ''), 'error');
+
                     if (data.fatal) {
-                        setStatus('error', '⚠ Fatal: ' + (data.details || 'unknown'));
-                        console.error('HLS fatal error:', data);
-                        // Coba recover
+                        setStatus('error', 'Fatal: ' + data.details);
+                        log('FATAL ERROR: ' + JSON.stringify(data), 'error');
+
+                        // Recovery
                         switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
-                                hls.startLoad();
+                                if (retryCount < MAX_RETRIES) {
+                                    retryCount++;
+                                    log('Retry ' + retryCount + '/' + MAX_RETRIES, 'info');
+                                    hls.startLoad();
+                                } else {
+                                    log('Max retry reached, coba reload', 'error');
+                                    setTimeout(reloadStream, 2000);
+                                }
                                 break;
                             case Hls.ErrorTypes.MEDIA_ERROR:
                                 hls.recoverMediaError();
+                                log('Media error recovered', 'info');
                                 break;
                             default:
-                                destroyHls();
-                                setStatus('error', 'Gagal load stream');
+                                log('Tidak bisa recover, reload manual', 'error');
                                 break;
                         }
                     } else {
                         // Non-fatal
-                        setStatus('loading', '⏳ Buffering...');
-                        console.warn('HLS non-fatal:', data.details);
+                        if (data.details === 'manifestLoadingError') {
+                            setStatus('error', 'Gagal load manifest (CORS?)');
+                            log('Mungkin masalah CORS - coba proxy', 'error');
+                            // Coba dengan proxy
+                            tryWithProxy();
+                        }
                     }
                 });
 
-                hls.on(Hls.Events.BUFFER_CREATED, function() {
-                    // Buffering mulai
+                hls.on(Hls.Events.BUFFER_APPENDING, function() {
+                    setStatus('loading', '⏳ Buffering...');
                 });
 
-                hls.on(Hls.Events.FRAG_BUFFERED, function() {
-                    // Data mulai masuk
+                hls.on(Hls.Events.BUFFER_APPENDED, function() {
+                    if (!isPlaying) {
+                        setStatus('playing', '▶ Streaming');
+                    }
                 });
 
-                // Timeout jika loading terlalu lama
+                // Load source
+                try {
+                    hls.loadSource(STREAM_URL);
+                    hls.attachMedia(video);
+                    log('HLS source loaded', 'info');
+                } catch (e) {
+                    log('Error loading source: ' + e.message, 'error');
+                    setStatus('error', 'Gagal load source');
+                }
+
+                // Timeout
                 const timeout = setTimeout(() => {
                     if (!isPlaying && hls) {
-                        setStatus('loading', '⏳ Loading lama, coba ulang...');
+                        log('Loading timeout, mungkin CORS', 'error');
+                        setStatus('error', '⏱ Timeout - coba reload');
+                        // Coba dengan proxy
+                        tryWithProxy();
                     }
-                }, 15000);
-                // Clear saat berhasil
+                }, 20000);
                 hls.on(Hls.Events.MANIFEST_PARSED, function() {
                     clearTimeout(timeout);
                 });
             }
 
-            // Stop stream
+            // ---------- PROXY FALLBACK ----------
+            let usingProxy = false;
+
+            function tryWithProxy() {
+                if (usingProxy) return;
+                usingProxy = true;
+                log('Mencoba dengan proxy CORS...', 'info');
+                setStatus('loading', '🔄 Mencoba proxy...');
+
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(STREAM_URL)}`;
+
+                if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = proxyUrl;
+                    video.play().catch(() => {});
+                    return;
+                }
+
+                if (hls) {
+                    destroyHls();
+                }
+
+                if (!Hls.isSupported()) {
+                    setStatus('error', 'HLS tidak didukung');
+                    return;
+                }
+
+                hls = new Hls({
+                    enableWorker: false,
+                    lowLatencyMode: true,
+                });
+
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    video.play().then(() => {
+                        isPlaying = true;
+                        setStatus('playing', '▶ Proxy HLS');
+                        log('Proxy berhasil!', 'success');
+                    }).catch((e) => {
+                        log('Proxy play error: ' + e.message, 'error');
+                    });
+                });
+
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    log('Proxy error: ' + data.details, 'error');
+                    if (data.fatal) {
+                        setStatus('error', 'Proxy gagal');
+                        log('Proxy gagal total, coba manual', 'error');
+                    }
+                });
+
+                hls.loadSource(proxyUrl);
+                hls.attachMedia(video);
+            }
+
+            // ---------- STOP ----------
             function stopStream() {
                 destroyHls();
-                // Hentikan video & kosongkan src
                 video.pause();
                 video.removeAttribute('src');
                 video.load();
                 isPlaying = false;
+                usingProxy = false;
+                retryCount = 0;
                 setStatus('', '⏹ Berhenti');
+                log('Stream dihentikan', 'info');
             }
 
-            // Reload (refresh)
+            // ---------- RELOAD ----------
             function reloadStream() {
+                log('Reload stream...', 'info');
                 stopStream();
-                // Tunggu sebentar lalu load ulang
+                usingProxy = false;
+                retryCount = 0;
                 setTimeout(() => {
                     loadStream();
-                }, 300);
+                }, 500);
             }
 
-            // ---------- EVENT LISTENER ----------
+            // ---------- EVENT LISTENERS ----------
             document.getElementById('btnPlay').addEventListener('click', function() {
-                // Jika sudah berhenti atau error, load ulang
                 if (!isPlaying) {
                     loadStream();
-                } else {
-                    // Jika sedang pause, resume
-                    if (video.paused) {
-                        video.play().catch(() => {});
-                    }
+                } else if (video.paused) {
+                    video.play().catch(() => {});
+                    setStatus('playing', '▶ Melanjutkan');
                 }
             });
 
             document.getElementById('btnStop').addEventListener('click', stopStream);
-
             document.getElementById('btnReload').addEventListener('click', reloadStream);
 
-            // Tampilkan URL di bar (dipotong)
+            document.getElementById('btnDebug').addEventListener('click', function() {
+                debugMode = !debugMode;
+                debugPanel.classList.toggle('show');
+                this.textContent = debugMode ? '🔒 Debug' : '🐞 Debug';
+                if (debugMode) {
+                    log('Debug mode aktif', 'info');
+                }
+            });
+
+            // Tampilkan URL
             urlDisplay.textContent = '📡 ' + STREAM_URL.replace(/^https?:\/\//, '').split('/')[0];
 
-            // Auto-load saat halaman dibuka
+            // Auto-load
             window.addEventListener('load', function() {
-                // Tunggu sebentar agar DOM siap
-                setTimeout(loadStream, 500);
+                setTimeout(loadStream, 800);
             });
 
-            // Handle visibility change - jika tab di-hidden, tidak reload otomatis
-            document.addEventListener('visibilitychange', function() {
-                if (!document.hidden && hls && !isPlaying) {
-                    // Jika kembali ke tab dan stream mati, coba reload
-                    // Tapi biarkan user yang klik play
-                }
-            });
-
-            // Jika video error karena network
+            // Video error handler
             video.addEventListener('error', function(e) {
-                if (!hls) {
-                    setStatus('error', 'Video error: ' + (e.message || 'unknown'));
+                const errorMsg = video.error ? video.error.message : 'unknown';
+                log('Video error: ' + errorMsg, 'error');
+                if (!hls && !video.src) {
+                    setStatus('error', 'Video error: ' + errorMsg);
                 }
             });
 
-            console.log('📺 Pemutar HLS siap. URL:', STREAM_URL);
-            console.log('🔧 Gunakan tombol Play/Stop/Reload untuk kontrol.');
+            console.log('📺 Pemutar HLS dengan dukungan CORS');
+            console.log('🔗 URL:', STREAM_URL);
+            console.log('💡 Jika gagal, klik tombol Debug untuk melihat log');
 
         })();
     </script>
