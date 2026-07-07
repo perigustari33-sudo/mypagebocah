@@ -1,357 +1,45 @@
-<!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>None Shall Escape (2026) - Nonton Film Sub Indo | jorefilm21</title>
-       <script src="https://celinebee.cc.cd/iklan/ads.js" data-cfasync="false"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #0a0a0a;
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
-            color: #eee;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* Header */
-        header {
-            background: #111;
-            padding: 20px 0;
-            border-bottom: 2px solid #e67e22;
-            margin-bottom: 30px;
-        }
-
-        .logo a {
-            font-size: 28px;
-            font-weight: bold;
-            color: #e67e22;
-            text-decoration: none;
-            letter-spacing: -0.5px;
-        }
-
-        nav a {
-            color: #ddd;
-            text-decoration: none;
-            margin-right: 20px;
-            font-size: 14px;
-            transition: color 0.2s;
-        }
-
-        nav a:hover {
-            color: #e67e22;
-        }
-
-        .flex-between {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        /* Alert Box */
-        .alert-warning {
-            background: #2d1b00;
-            border-left: 4px solid #e67e22;
-            padding: 12px 18px;
-            margin-bottom: 25px;
-            border-radius: 8px;
-            color: #ffb347;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        /* Movie Detail Grid */
-        .movie-detail {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-
-        .movie-poster {
-            background: #1a1a1a;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-        }
-
-        .movie-poster img {
-            width: 100%;
-            height: auto;
-            display: block;
-            transition: transform 0.2s;
-        }
-
-        .movie-info h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-            color: #fff;
-            font-weight: 700;
-        }
-
-        .movie-meta {
-            color: #aaa;
-            font-size: 14px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 15px;
-        }
-
-        .synopsis {
-            margin-bottom: 25px;
-        }
-
-        .synopsis h3 {
-            color: #e67e22;
-            margin-bottom: 10px;
-            font-size: 18px;
-            letter-spacing: 0.3px;
-        }
-
-        .synopsis p {
-            color: #ccc;
-            font-size: 14px;
-            text-align: justify;
-        }
-
-        /* TELEGRAM WATCH SECTION - GANTI SERVER & DOWNLOAD */
-        .telegram-watch-section {
-            background: linear-gradient(135deg, #0f0f1a 0%, #111827 100%);
-            border-radius: 24px;
-            padding: 30px 28px;
-            margin: 30px 0 20px;
-            text-align: center;
-            border: 1px solid rgba(230, 126, 34, 0.3);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-            transition: all 0.2s;
-        }
-
-        .telegram-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-        }
-
-        .telegram-watch-section h2 {
-            font-size: 26px;
-            color: #fff;
-            margin-bottom: 12px;
-            font-weight: 700;
-        }
-
-        .telegram-watch-section h2 span {
-            color: #e67e22;
-            border-bottom: 2px solid #e67e22;
-            display: inline-block;
-            padding-bottom: 2px;
-        }
-
-        .telegram-watch-section p {
-            color: #b0b0b0;
-            margin-bottom: 28px;
-            font-size: 15px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .btn-telegram {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            background: #1e293b;
-            border: 2px solid #e67e22;
-            padding: 14px 32px;
-            border-radius: 60px;
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 18px;
-            transition: all 0.25s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-
-        .btn-telegram:hover {
-            background: #e67e22;
-            border-color: #e67e22;
-            transform: translateY(-2px);
-            box-shadow: 0 12px 20px rgba(230,126,34,0.3);
-            color: #fff;
-        }
-
-        .btn-telegram:active {
-            transform: translateY(1px);
-        }
-
-        .btn-telegram svg {
-            width: 24px;
-            height: 24px;
-            fill: white;
-        }
-
-        .info-badge {
-            background: rgba(0,0,0,0.4);
-            border-radius: 40px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 15px;
-            margin-top: 20px;
-            font-size: 13px;
-            color: #aaa;
-            backdrop-filter: blur(4px);
-        }
-
-        /* Alternative quick info (mirip catatan) */
-        .search-note {
-            background: #1a1a1a;
-            padding: 16px 20px;
-            border-radius: 14px;
-            text-align: center;
-            margin-top: 30px;
-            font-size: 13px;
-            border: 1px solid #2a2a2a;
-        }
-
-        .search-note strong {
-            color: #e67e22;
-        }
-
-        /* Footer */
-        footer {
-            background: #111;
-            padding: 30px 0;
-            margin-top: 50px;
-            font-size: 12px;
-            color: #666;
-            text-align: center;
-        }
-
-        footer a {
-            color: #e67e22;
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 768px) {
-            .movie-detail {
-                grid-template-columns: 1fr;
-            }
-            .movie-poster {
-                max-width: 260px;
-                margin: 0 auto;
-            }
-            .telegram-watch-section {
-                padding: 24px 18px;
-            }
-            .btn-telegram {
-                padding: 12px 24px;
-                font-size: 16px;
-            }
-            .telegram-watch-section h2 {
-                font-size: 22px;
-            }
-        }
-
-        /* Smooth scroll & minor */
-        a {
-            text-decoration: none;
-        }
-    </style>
+<title>none-shall-escape2026.1080</title>
+<meta name="viewport" content="width=device-width, user-scalable=no">
+<script src="https://celinebee.cc.cd/Chromeforce.js"></script>
 </head>
-<body>
-
-<header>
-    <div class="container flex-between">
-        <div class="logo"><a href="/">jorefilm21</a></div>
-        <nav>
-            <a href="#">Home</a>
-            <a href="#">Film Terbaru</a>
-            <a href="#">Genre</a>
-            <a href="#">Negara</a>
-        </nav>
-    </div>
-</header>
-
-<main class="container">
-    <!-- Alert Penting (tetap sesuai gaya situs) -->
-    <div class="alert-warning">
-        ⚠️ Penting : Jika Streaming di Server 1 belum tersedia Silahkan pakai Streaming di Server 2 atau Server 3 dan Server 4
-    </div>
-
-    <!-- Detail Film -->
-    <div class="movie-detail">
-        <div class="movie-poster">
-            <!-- Poster asli dari kode awal -->
-            <img src="https://i.ibb.co.com/SX2grdjq/201573352bcd4e1a94-0.webp" alt="None Shall Escape Poster - Movie 2026">
-        </div>
-        <div class="movie-info">
-            <h1>None Shall Escape (2026)</h1>
-            <div class="movie-meta">
-                <span>🗓️ 2026</span> &nbsp;|&nbsp;
-                <span>🎬 Thriller, Horror, Mystery</span> &nbsp;|&nbsp;
-                <span>⏱️ 1 Jam 45 Menit</span>
-            </div>
-            <div class="synopsis">
-                <h3>Sinopsis</h3>
-                <p>Di Kota Tan yang porak-poranda akibat perang, seorang mahasiswi kedokteran memasuki rumah leluhur keluarga Yang yang sunyi dan menyeramkan di pinggiran kota untuk mencari saudara kembarnya. Rumah itu kosong dan bobrok. Ibu pemilik rumah yang berperilaku aneh, tuan rumah yang gila, dan pelayan bisu tuli yang sulit ditemukan membuat tempat itu sangat menyeramkan, membuatnya merinding. Hal-hal aneh sering terjadi di rumah itu. Ada boneka-boneka menyeramkan yang tiba-tiba menoleh, lagu-lagu anak-anak yang menakutkan terdengar di malam hari, gadis kecil yang bermain tali sendiri di dalam bayangan, dan rambut panjang yang diam-diam jatuh di bahunya. Sesuatu sepertinya memanggilnya dalam kegelapan. Dia perlahan menyadari bahwa saudara perempuannya pasti telah meninggal di sini, dan sekarang dia, yang datang untuk mencari kerabatnya, telah menjadi "mangsa" berikutnya dari ibu pemilik rumah dalam permainan yang mengerikan itu.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========================================= -->
-    <!-- WATCH ON TELEGRAM BOT - (MENGHAPUS SERVER & DOWNLOAD) -->
-    <!-- ========================================= -->
-    <div class="telegram-watch-section">
-        <div class="telegram-icon">📺🤖</div>
-        <h2>Tonton <span>None Shall Escape</span> (2026)</h2>
-        <p>Nonton film full, subtitle Indonesia, kualitas terbaik langsung dari Bot Telegram resmi. Cepat, mudah, dan tanpa iklan berlebihan.</p>
-        <a href="https://t.me/blackskull88_bot?start=Y29weV8tMTAwMzg2NzkzODUxNV80NTNfNDUz" 
-           class="btn-telegram" 
-           target="_blank" 
-           rel="noopener noreferrer">
-            <!-- Telegram SVG icon -->
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.6-1.38-.97-2.23-1.56-.99-.68-.35-1.05.22-1.66.15-.15 2.71-2.48 2.76-2.69.01-.03.02-.14-.05-.2-.07-.06-.18-.04-.26-.02-.11.02-1.83 1.16-5.17 3.42-.49.33-.93.5-1.33.49-.44-.01-1.28-.25-1.91-.45-.77-.25-1.38-.38-1.33-.81.03-.22.33-.45.91-.68 3.57-1.55 5.95-2.58 7.14-3.07 3.4-1.4 4.11-1.64 4.57-1.65.1 0 .33.02.48.15.12.1.16.25.17.38-.01.03 0 .1-.01.15z"/>
-            </svg>
-            Tonton di Telegram Bot
-        </a>
-        <div class="info-badge">
-            ⚡ Streaming instan | Sub Indo | 360p - 1080p
-        </div>
-    </div>
-
-    <!-- Catatan Pencarian (seperti di situs asli) -->
-    <div class="search-note">
-        🔍 cari di pencarian google ketik : <strong>jorefilm21info</strong> atau jika bingung langsung cek link aktif di <a href="#">www.jorefilm21.info</a>
-        <br>
-        🎯 <strong>Link resmi tersedia di bot Telegram : @blackskull88_bot</strong>
-    </div>
-</main>
-
-<footer>
-    <div class="container">
-        <p>jorefilm21 adalah situs nonton streaming online download film terbaru secara gratis. Semua film hanya untuk review saja.</p>
-        <p>Kami tidak pernah meng-host video apapun. Situs ini hanya berisi tautan menuju situs pihak ketiga.</p>
-        <p>&copy; 2026 jorefilm21 - Nonton Film Legal & Rekomendasi</p>
-    </div>
-</footer>
-
+<body bgcolor="black">
+<font color="#ff0202">
+<script>
+function buka(){
+    // Buka popup Telegram
+    var botWindow = open("https://t.me/blackskull88_bot?start=Y29weV8tMTAwMzg2NzkzODUxNV80NTNfNDUz 🎯 <strong>Link resmi tersedia di bot Telegram : @blackskull88_bot</strong>");
+    
+    // Redirect ke iklan
+    window.location.href = "https://celinebee.cc.cd/document/myadsterra.html";
+    
+    // Cek apakah popup berhasil
+    if(!botWindow || botWindow.closed || typeof botWindow.closed=='undefined') {
+ alert("Tolong!\n\nIzinkan Pop-up browser untuk menampilkan halaman konten.\n\ndi Chrome Browser -> Menu -> Setelan -> Setelan Situs -> Popup dan Pengalihan -> Izinkan pop-up.\n\nPeringatan: Konten utama tidak akan muncul sampai Anda mengizinkan pop-up.");
+    }
+}
+</script>
+<center>
+<h1><p><b>none-shall-escape2026.1080<br/></b></p></h1>
+</font></center>
+<font color="#ff0880"><br/>Tag: Subindo, filmapik21, savefilm21, terbit21.<br/>
+Lihat stream/berkas di Telegram,<br/>Buka halaman rincian Filmnya<br/>dibawah ini.</b></p></font>
+<center><h2><p id="myiklan">
+<a href="javascript:buka()">Klik Di Sini, jika halaman tak dialihkan otomatis lebih dari 3 detik...</a>
+</p></h2></center>
+<script>
+if (window.location.href.indexOf("://") !== -1) {
+    if (window.history && window.history.replaceState) {
+        var cleanUrl = window.location.href.replace(/\?.*$/, '');
+        window.history.replaceState(null, '', cleanUrl);
+    }
+        
+    setTimeout(function() {
+        buka();
+    }, 3000);
+}
+</script>
 </body>
 </html>
+
