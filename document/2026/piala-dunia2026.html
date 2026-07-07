@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Pemutar Stream HLS</title>
 
-    <!-- HLS.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
     <style>
@@ -162,6 +161,17 @@
             border-color: #c9302c;
         }
 
+        .btn-success {
+            background: #5cb85c;
+            border-color: #5cb85c;
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #449d44;
+            border-color: #449d44;
+        }
+
         .btn-warning {
             background: #f0ad4e;
             border-color: #f0ad4e;
@@ -179,7 +189,7 @@
             border-top: 1px solid #222;
             font-size: 12px;
             color: #666;
-            max-height: 120px;
+            max-height: 180px;
             overflow-y: auto;
             font-family: 'Courier New', monospace;
             display: none;
@@ -190,9 +200,11 @@
         }
 
         .debug-panel .log-entry {
-            padding: 2px 0;
+            padding: 3px 0;
             border-bottom: 1px solid #1a1a1a;
             color: #888;
+            font-size: 11px;
+            word-break: break-all;
         }
 
         .debug-panel .log-entry.error {
@@ -205,6 +217,28 @@
 
         .debug-panel .log-entry.info {
             color: #5bc0de;
+        }
+
+        .debug-panel .log-entry.warning {
+            color: #f0ad4e;
+        }
+
+        .response-preview {
+            padding: 12px 20px;
+            background: #111;
+            border-top: 1px solid #222;
+            font-size: 12px;
+            color: #888;
+            max-height: 150px;
+            overflow-y: auto;
+            display: none;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .response-preview.show {
+            display: block;
         }
 
         @media (max-width: 600px) {
@@ -248,10 +282,12 @@
                 <button class="btn btn-primary" id="btnPlay">▶ Putar</button>
                 <button class="btn btn-danger" id="btnStop">⏹ Stop</button>
                 <button class="btn btn-warning" id="btnReload">⟳ Reload</button>
+                <button class="btn btn-success" id="btnFetch">📥 Cek URL</button>
                 <button class="btn" id="btnDebug">🐞 Debug</button>
             </div>
         </div>
 
+        <div class="response-preview" id="responsePreview"></div>
         <div class="debug-panel" id="debugPanel">
             <div id="logContainer"></div>
         </div>
@@ -269,12 +305,13 @@
             const urlDisplay = document.getElementById('urlDisplay');
             const debugPanel = document.getElementById('debugPanel');
             const logContainer = document.getElementById('logContainer');
+            const responsePreview = document.getElementById('responsePreview');
 
             let hls = null;
             let isPlaying = false;
             let debugMode = false;
             let retryCount = 0;
-            const MAX_RETRIES = 3;
+            const MAX_RETRIES = 5;
 
             // ---------- LOGGING ----------
             function log(msg, type = 'info') {
@@ -294,15 +331,60 @@
                 if (debugMode) log(`Status: ${msg}`, type || 'info');
             }
 
-            // ---------- CORS PROXY ----------
-            function getProxiedUrl(url) {
-                // Coba beberapa proxy jika CORS bermasalah
-                const proxies = [
-                    `https://corsproxy.io/?${encodeURIComponent(url)}`,
-                    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-                ];
-                // Kembalikan URL asli dulu, proxy hanya jika diperlukan
-                return url;
+            // ---------- CEK RESPONSE URL ----------
+            async function checkUrl() {
+                setStatus('loading', 'Mengecek URL...');
+                log('Mengecek response dari: ' + STREAM_URL, 'info');
+                responsePreview.classList.add('show');
+                responsePreview.textContent = 'Loading...';
+
+                try {
+                    const response = await fetch(STREAM_URL, {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                            'Accept': '*/*',
+                            'Origin': window.location.origin,
+                        }
+                    });
+
+                    const text = await response.text();
+
+                    responsePreview.textContent = `📥 STATUS: ${response.status} ${response.statusText}\n` +
+                        `📋 CONTENT-TYPE: ${response.headers.get('content-type') || 'unknown'}\n` +
+                        `📏 LENGTH: ${text.length} characters\n` +
+                        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                        text.substring(0, 2000) + (text.length > 2000 ? '\n... (truncated)' : '');
+
+                    log(`Response: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                    log(`Content-Type: ${response.headers.get('content-type')}`);
+
+                    if (text.trim().startsWith('#')) {
+                        log('✅ Ini adalah file M3U yang valid!', 'success');
+                        setStatus('', '✅ M3U valid');
+                        // Cek apakah ada #EXT-X-STREAM-INF (master playlist) atau #EXTINF (media playlist)
+                        if (text.includes('#EXT-X-STREAM-INF')) {
+                            log('📋 Ini adalah MASTER playlist (berisi multiple bitrate)', 'info');
+                            // Extract URLs dari master playlist
+                            const lines = text.split('\n');
+                            const urls = lines.filter(line => line.trim() && !line.startsWith('#'));
+                            log(`Ditemukan ${urls.length} stream di dalamnya`, 'info');
+                            urls.forEach((u, i) => log(`  ${i+1}. ${u}`, 'info'));
+                        } else if (text.includes('#EXTINF')) {
+                            log('📋 Ini adalah MEDIA playlist (langsung ke segmen TS)', 'info');
+                        } else {
+                            log('⚠ M3U tidak memiliki #EXTINF atau #EXT-X-STREAM-INF', 'warning');
+                        }
+                    } else {
+                        log('❌ BUKAN file M3U yang valid!', 'error');
+                        log('Response dimulai dengan: ' + text.substring(0, 100), 'error');
+                        setStatus('error', '❌ Bukan M3U');
+                    }
+
+                } catch (e) {
+                    responsePreview.textContent = '❌ ERROR: ' + e.message;
+                    log('Fetch error: ' + e.message, 'error');
+                    setStatus('error', 'Gagal cek URL');
+                }
             }
 
             // ---------- DESTROY HLS ----------
@@ -319,7 +401,7 @@
                 isPlaying = false;
             }
 
-            // ---------- LOAD STREAM with HLS.js ----------
+            // ---------- LOAD STREAM ----------
             function loadStream() {
                 destroyHls();
 
@@ -342,7 +424,6 @@
                         .catch((err) => {
                             setStatus('error', 'Native HLS gagal');
                             log('Native HLS error: ' + err.message, 'error');
-                            // Fallback ke hls.js
                             loadWithHlsJs();
                         });
                     return;
@@ -360,42 +441,54 @@
 
                 log('Menggunakan HLS.js', 'info');
 
-                hls = new Hls({
+                const config = {
                     enableWorker: true,
                     lowLatencyMode: true,
                     backbufferLength: 30,
                     maxBufferLength: 30,
+                    // Coba berbagai konfigurasi untuk levelParsingError
+                    fragLoadingMaxRetry: 6,
+                    levelLoadingMaxRetry: 6,
+                    manifestLoadingMaxRetry: 6,
+                    manifestLoadingTimeOut: 30000,
+                    levelLoadingTimeOut: 30000,
+                    fragLoadingTimeOut: 30000,
+                    // Abaikan kesalahan parsing jika memungkinkan
+                    enableSoftwareAES: true,
+                    // Coba dengan berbagai mode
+                    startLevel: -1,
+                    // Mode CORS
                     xhrSetup: function(xhr, url) {
-                        // Tambahkan header untuk mengatasi CORS
                         xhr.withCredentials = false;
-                        // Set custom user-agent agar server mengizinkan
                         xhr.setRequestHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+                        xhr.setRequestHeader('Accept', '*/*');
                         xhr.setRequestHeader('Origin', window.location.origin);
-                        // Allow any response
-                        xhr.onreadystatechange = function() {
-                            if (xhr.readyState === 4) {
-                                log('XHR status: ' + xhr.status + ' untuk ' + url.substring(0, 60), 'info');
-                            }
-                        };
+                        // Coba tambahkan referer
+                        xhr.setRequestHeader('Referer', window.location.href);
+
+                        // Log setiap request
+                        log('XHR Request: ' + url.substring(0, 80) + (url.length > 80 ? '...' : ''), 'info');
                     },
-                    // Coba tanpa CORS strict
                     fetchSetup: function(context, initParams) {
-                        // Override fetch untuk menangani CORS
                         return fetch(context.url, {
                             ...initParams,
                             mode: 'cors',
                             credentials: 'omit',
                             headers: {
                                 ...initParams.headers,
-                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                                'Accept': '*/*',
+                                'Referer': window.location.href,
                             }
                         });
                     }
-                });
+                };
 
-                // Event listeners
+                hls = new Hls(config);
+
+                // ---------- EVENT HANDLERS ----------
                 hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    log('Manifest berhasil diparsing', 'success');
+                    log('✅ MANIFEST PARSED!', 'success');
                     video.play()
                         .then(() => {
                             isPlaying = true;
@@ -413,27 +506,73 @@
                     log('Level loaded: ' + (data.level ? data.level.url : 'unknown'), 'info');
                 });
 
-                hls.on(Hls.Events.FRAG_LOADED, function(event, data) {
-                    log('Fragment loaded: ' + data.frag.sn, 'info');
+                hls.on(Hls.Events.LEVEL_SWITCHING, function(event, data) {
+                    log('Switch ke level: ' + data.level, 'info');
                 });
 
+                hls.on(Hls.Events.FRAG_LOADED, function(event, data) {
+                    // log('Fragment loaded: ' + data.frag.sn, 'info');
+                });
+
+                hls.on(Hls.Events.FRAG_PARSING_INIT_SEGMENT, function() {
+                    log('Init segment diproses', 'info');
+                });
+
+                hls.on(Hls.Events.FRAG_PARSING_DATA, function() {
+                    log('Data fragment diproses', 'info');
+                });
+
+                // ---------- TANGANI levelParsingError ----------
                 hls.on(Hls.Events.ERROR, function(event, data) {
-                    log('HLS Error: ' + data.details + ' - ' + (data.error || ''), 'error');
+                    log(`HLS Error: ${data.details}`, 'error');
+
+                    // Tangani levelParsingError secara spesifik
+                    if (data.details === 'levelParsingError') {
+                        log('⚠️ LEVEL PARSING ERROR - Mungkin format M3U tidak standar', 'error');
+                        log('URL yang gagal: ' + (data.url || 'unknown'), 'error');
+
+                        if (data.response) {
+                            log('Response: ' + data.response.substring(0, 300), 'error');
+                            responsePreview.classList.add('show');
+                            responsePreview.textContent = '❌ LEVEL PARSING ERROR\n' +
+                                'Response dari server:\n' +
+                                '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+                                (data.response || '(empty)').substring(0, 1000);
+                        }
+
+                        // Coba alternatif: gunakan URL langsung sebagai src jika itu file TS
+                        if (STREAM_URL.endsWith('.m3u8') || STREAM_URL.endsWith('.m3u')) {
+                            log('Mencoba metode alternatif...', 'warning');
+                            // Coba dengan video.js atau langsung
+                            tryAlternativePlayback();
+                        }
+
+                        if (retryCount < MAX_RETRIES) {
+                            retryCount++;
+                            log(`Retry ${retryCount}/${MAX_RETRIES}...`, 'warning');
+                            setTimeout(() => {
+                                hls.loadSource(STREAM_URL);
+                            }, 2000);
+                        } else {
+                            log('Max retry reached', 'error');
+                            setStatus('error', '❌ Gagal parsing M3U');
+                        }
+                        return;
+                    }
 
                     if (data.fatal) {
                         setStatus('error', 'Fatal: ' + data.details);
                         log('FATAL ERROR: ' + JSON.stringify(data), 'error');
 
-                        // Recovery
                         switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
                                 if (retryCount < MAX_RETRIES) {
                                     retryCount++;
-                                    log('Retry ' + retryCount + '/' + MAX_RETRIES, 'info');
+                                    log('Network error, retry ' + retryCount, 'warning');
                                     hls.startLoad();
                                 } else {
-                                    log('Max retry reached, coba reload', 'error');
-                                    setTimeout(reloadStream, 2000);
+                                    log('Max retry, reload', 'error');
+                                    setTimeout(reloadStream, 3000);
                                 }
                                 break;
                             case Hls.ErrorTypes.MEDIA_ERROR:
@@ -441,16 +580,13 @@
                                 log('Media error recovered', 'info');
                                 break;
                             default:
-                                log('Tidak bisa recover, reload manual', 'error');
+                                log('Tidak bisa recover', 'error');
                                 break;
                         }
                     } else {
-                        // Non-fatal
-                        if (data.details === 'manifestLoadingError') {
-                            setStatus('error', 'Gagal load manifest (CORS?)');
-                            log('Mungkin masalah CORS - coba proxy', 'error');
-                            // Coba dengan proxy
-                            tryWithProxy();
+                        if (data.details === 'manifestLoadingError' || data.details === 'manifestIncompleteError') {
+                            setStatus('error', 'Gagal load manifest');
+                            log('Mungkin CORS atau server error', 'error');
                         }
                     }
                 });
@@ -478,68 +614,54 @@
                 // Timeout
                 const timeout = setTimeout(() => {
                     if (!isPlaying && hls) {
-                        log('Loading timeout, mungkin CORS', 'error');
-                        setStatus('error', '⏱ Timeout - coba reload');
-                        // Coba dengan proxy
-                        tryWithProxy();
+                        log('⏱ Loading timeout', 'error');
+                        setStatus('error', '⏱ Timeout');
+                        // Coba cek URL
+                        checkUrl();
                     }
-                }, 20000);
+                }, 30000);
                 hls.on(Hls.Events.MANIFEST_PARSED, function() {
                     clearTimeout(timeout);
                 });
             }
 
-            // ---------- PROXY FALLBACK ----------
-            let usingProxy = false;
+            // ---------- ALTERNATIVE PLAYBACK ----------
+            function tryAlternativePlayback() {
+                log('Mencoba alternatif: fetch + MediaSource', 'warning');
+                setStatus('loading', '🔄 Mencoba alternatif...');
 
-            function tryWithProxy() {
-                if (usingProxy) return;
-                usingProxy = true;
-                log('Mencoba dengan proxy CORS...', 'info');
-                setStatus('loading', '🔄 Mencoba proxy...');
-
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(STREAM_URL)}`;
-
-                if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = proxyUrl;
+                // Coba langsung dengan video jika URL mengarah ke TS
+                if (STREAM_URL.includes('.ts')) {
+                    video.src = STREAM_URL;
                     video.play().catch(() => {});
                     return;
                 }
 
-                if (hls) {
-                    destroyHls();
-                }
-
-                if (!Hls.isSupported()) {
-                    setStatus('error', 'HLS tidak didukung');
-                    return;
-                }
-
-                hls = new Hls({
-                    enableWorker: false,
-                    lowLatencyMode: true,
-                });
-
-                hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    video.play().then(() => {
-                        isPlaying = true;
-                        setStatus('playing', '▶ Proxy HLS');
-                        log('Proxy berhasil!', 'success');
-                    }).catch((e) => {
-                        log('Proxy play error: ' + e.message, 'error');
-                    });
-                });
-
-                hls.on(Hls.Events.ERROR, function(event, data) {
-                    log('Proxy error: ' + data.details, 'error');
-                    if (data.fatal) {
-                        setStatus('error', 'Proxy gagal');
-                        log('Proxy gagal total, coba manual', 'error');
+                // Coba cari URL TS dari M3U
+                fetch(STREAM_URL, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                     }
+                })
+                .then(res => res.text())
+                .then(text => {
+                    const lines = text.split('\n');
+                    const tsUrls = lines.filter(line =>
+                        line.trim() && !line.startsWith('#') && line.includes('.ts')
+                    );
+                    if (tsUrls.length > 0) {
+                        const firstTs = tsUrls[0].startsWith('http') ? tsUrls[0] :
+                            new URL(tsUrls[0], STREAM_URL).href;
+                        log('Menemukan TS: ' + firstTs, 'success');
+                        video.src = firstTs;
+                        video.play().catch(() => {});
+                    } else {
+                        log('Tidak menemukan TS di M3U', 'error');
+                    }
+                })
+                .catch(e => {
+                    log('Alternative fetch gagal: ' + e.message, 'error');
                 });
-
-                hls.loadSource(proxyUrl);
-                hls.attachMedia(video);
             }
 
             // ---------- STOP ----------
@@ -549,7 +671,6 @@
                 video.removeAttribute('src');
                 video.load();
                 isPlaying = false;
-                usingProxy = false;
                 retryCount = 0;
                 setStatus('', '⏹ Berhenti');
                 log('Stream dihentikan', 'info');
@@ -557,10 +678,8 @@
 
             // ---------- RELOAD ----------
             function reloadStream() {
-                log('Reload stream...', 'info');
+                log('🔄 Reload stream...', 'info');
                 stopStream();
-                usingProxy = false;
-                retryCount = 0;
                 setTimeout(() => {
                     loadStream();
                 }, 500);
@@ -578,36 +697,36 @@
 
             document.getElementById('btnStop').addEventListener('click', stopStream);
             document.getElementById('btnReload').addEventListener('click', reloadStream);
+            document.getElementById('btnFetch').addEventListener('click', checkUrl);
 
             document.getElementById('btnDebug').addEventListener('click', function() {
                 debugMode = !debugMode;
                 debugPanel.classList.toggle('show');
                 this.textContent = debugMode ? '🔒 Debug' : '🐞 Debug';
                 if (debugMode) {
-                    log('Debug mode aktif', 'info');
+                    log('🔍 Debug mode aktif', 'info');
                 }
             });
 
-            // Tampilkan URL
             urlDisplay.textContent = '📡 ' + STREAM_URL.replace(/^https?:\/\//, '').split('/')[0];
 
             // Auto-load
             window.addEventListener('load', function() {
-                setTimeout(loadStream, 800);
+                setTimeout(() => {
+                    loadStream();
+                    // Cek URL juga untuk diagnosa
+                    setTimeout(checkUrl, 2000);
+                }, 800);
             });
 
-            // Video error handler
             video.addEventListener('error', function(e) {
                 const errorMsg = video.error ? video.error.message : 'unknown';
                 log('Video error: ' + errorMsg, 'error');
-                if (!hls && !video.src) {
-                    setStatus('error', 'Video error: ' + errorMsg);
-                }
             });
 
-            console.log('📺 Pemutar HLS dengan dukungan CORS');
+            console.log('📺 Pemutar HLS dengan diagnosa levelParsingError');
             console.log('🔗 URL:', STREAM_URL);
-            console.log('💡 Jika gagal, klik tombol Debug untuk melihat log');
+            console.log('💡 Klik "Cek URL" untuk melihat response server');
 
         })();
     </script>
