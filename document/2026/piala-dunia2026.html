@@ -2,16 +2,14 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0 user-scalable=0"/>
-    <title>Pemutar Streaming HLS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Pemutar Stream FWC 2026</title>
 
-    <!-- ============================================ -->
-    <!-- 1. Sertakan library HLS.js dari CDN           -->
-    <!-- ============================================ -->
+    <!-- HLS.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
     <style>
-        /* Reset & styling minimalis */
+        /* Reset & Fullscreen */
         * {
             margin: 0;
             padding: 0;
@@ -19,230 +17,199 @@
         }
 
         body {
-            background: #0b0e14;
+            background: #0a0a0a;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             padding: 16px;
         }
 
-        .player-container {
-            max-width: 900px;
+        .player-wrapper {
             width: 100%;
-            background: #1a1f2a;
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+            max-width: 960px;
+            background: #1a1a1a;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            border: 1px solid #2a2a2a;
         }
 
-        .video-wrapper {
+        /* Container video - rasio 16:9 */
+        .video-container {
             position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 */
             background: #000;
-            border-radius: 14px;
             overflow: hidden;
         }
 
-        video {
-            display: block;
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: auto;
-            aspect-ratio: 16 / 9;
-            background: #0a0c10;
-            outline: none;
+            height: 100%;
+            background: #000;
+            display: block;
         }
 
-        /* Info & status di bawah player */
-        .info-panel {
-            margin-top: 18px;
+        /* Info & Status */
+        .info-bar {
+            padding: 16px 20px;
+            background: #141414;
+            border-top: 1px solid #2a2a2a;
             display: flex;
             flex-wrap: wrap;
+            justify-content: space-between;
             align-items: center;
-            gap: 12px 18px;
-            color: #b0b8c5;
-            font-size: 0.9rem;
+            gap: 10px;
         }
 
-        .status-badge {
-            display: inline-flex;
+        .status {
+            display: flex;
             align-items: center;
-            gap: 8px;
-            background: #232a36;
-            padding: 6px 16px 6px 12px;
-            border-radius: 40px;
-            font-weight: 500;
-            font-size: 0.85rem;
+            gap: 10px;
+            font-size: 14px;
+            color: #aaa;
         }
 
-        .status-dot {
+        .status .dot {
             display: inline-block;
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: #6c7a8a;
-            transition: background 0.2s;
+            background: #555;
+            transition: background 0.3s;
         }
 
-        .status-dot.loading {
-            background: #fbbf24;
-            animation: pulse-dot 1s infinite;
+        .status .dot.loading {
+            background: #f0ad4e;
+            animation: pulse 1s infinite;
         }
 
-        .status-dot.playing {
-            background: #34d399;
+        .status .dot.playing {
+            background: #5cb85c;
         }
 
-        .status-dot.error {
-            background: #f87171;
+        .status .dot.error {
+            background: #d9534f;
         }
 
-        @keyframes pulse-dot {
-            0%,
-            100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.5;
-                transform: scale(0.85);
-            }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
         }
 
-        .stream-url-box {
-            flex: 1;
-            min-width: 200px;
-            background: #0f141c;
-            padding: 6px 14px;
-            border-radius: 30px;
-            border: 1px solid #2d3646;
-            font-size: 0.8rem;
-            color: #9aa3b3;
+        .status-text {
+            transition: color 0.3s;
+        }
+
+        .url-label {
+            font-size: 12px;
+            color: #666;
+            background: #222;
+            padding: 4px 12px;
+            border-radius: 20px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            max-width: 260px;
+            border: 1px solid #333;
             font-family: 'Courier New', monospace;
         }
 
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
         .btn {
-            background: #2d3646;
+            background: #2a2a2a;
             border: none;
-            color: #e2e8f0;
-            padding: 8px 18px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 0.85rem;
+            color: #ddd;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
             cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            transition: all 0.2s;
+            border: 1px solid #3a3a3a;
         }
 
         .btn:hover {
-            background: #3d465a;
-        }
-
-        .btn:active {
-            transform: scale(0.96);
+            background: #3a3a3a;
+            color: #fff;
         }
 
         .btn-primary {
-            background: #2563eb;
+            background: #007bff;
+            border-color: #007bff;
             color: #fff;
         }
 
         .btn-primary:hover {
-            background: #1d4ed8;
+            background: #0056b3;
+            border-color: #0056b3;
         }
 
         .btn-danger {
-            background: #b91c1c;
+            background: #d9534f;
+            border-color: #d9534f;
             color: #fff;
         }
 
         .btn-danger:hover {
-            background: #991b1b;
+            background: #c9302c;
+            border-color: #c9302c;
         }
 
-        .action-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-left: auto;
-        }
-
-        /* pesan error / log singkat */
-        .log-message {
-            margin-top: 12px;
-            padding: 8px 14px;
-            border-radius: 30px;
-            background: #141b26;
-            font-size: 0.8rem;
-            color: #7f8a9e;
-            border-left: 4px solid #2d3646;
-            transition: all 0.2s;
-        }
-
-        .log-message.error {
-            border-left-color: #f87171;
-            color: #fca5a5;
-        }
-
-        .log-message.success {
-            border-left-color: #34d399;
-            color: #6ee7b7;
-        }
-
-        /* responsive */
+        /* Responsif */
         @media (max-width: 600px) {
-            .info-panel {
+            .info-bar {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 8px;
             }
-            .action-group {
-                margin-left: 0;
-                justify-content: flex-end;
+
+            .btn-group {
+                justify-content: center;
             }
-            .stream-url-box {
-                white-space: normal;
+
+            .url-label {
+                max-width: 100%;
+                text-align: center;
+            }
+
+            .status {
+                justify-content: center;
             }
         }
     </style>
 </head>
-
 <body>
 
-    <div class="player-container">
-
-        <!-- ====== VIDEO ====== -->
-        <div class="video-wrapper">
-            <video id="videoPlayer" controls playsinline autoplay muted>
-                <!-- Browser akan menampilkan pesan ini jika tidak bisa memutar HLS -->
-                Your browser does not support HTML5 video or HLS.
-            </video>
+    <div class="player-wrapper">
+        <!-- Video -->
+        <div class="video-container">
+            <video id="video" controls playsinline></video>
         </div>
 
-        <!-- ====== PANEL KONTROL & STATUS ====== -->
-        <div class="info-panel">
-            <div class="status-badge">
-                <span class="status-dot" id="statusDot"></span>
-                <span id="statusText">Siap</span>
+        <!-- Control Bar -->
+        <div class="info-bar">
+            <div class="status">
+                <span class="dot" id="statusDot"></span>
+                <span class="status-text" id="statusText">Memuat...</span>
             </div>
 
-            <div class="stream-url-box" id="urlDisplay" title="Klik untuk mengubah URL">
-                🔗 https://celinebee.cc.cd/document/sports.m3u
-            </div>
+            <div class="url-label" id="urlDisplay">📡 celinebee.cc.cd</div>
 
-            <div class="action-group">
-                <button class="btn btn-primary" id="btnLoad">▶ Muat Ulang</button>
-                <button class="btn" id="btnChangeUrl">✏️ Ganti URL</button>
+            <div class="btn-group">
+                <button class="btn btn-primary" id="btnPlay">▶ Putar</button>
+                <button class="btn btn-danger" id="btnStop">⏹ Stop</button>
+                <button class="btn" id="btnReload">⟳ Reload</button>
             </div>
-        </div>
-
-        <!-- ====== LOG / PESAN ====== -->
-        <div class="log-message" id="logMessage">
-            💡 Siap memutar stream. Klik "Muat Ulang" jika video belum muncul.
         </div>
     </div>
 
@@ -250,242 +217,198 @@
         (function() {
             'use strict';
 
-            // --- Elemen DOM ---
-            const video = document.getElementById('videoPlayer');
+            // ---------- URL STREAM (LANGSUNG DARI ANDA) ----------
+            const STREAM_URL = 'https://celinebee.cc.cd/document/sports.m3u';
+            // -----------------------------------------------------
+
+            const video = document.getElementById('video');
             const statusDot = document.getElementById('statusDot');
             const statusText = document.getElementById('statusText');
-            const logEl = document.getElementById('logMessage');
             const urlDisplay = document.getElementById('urlDisplay');
-            const btnLoad = document.getElementById('btnLoad');
-            const btnChangeUrl = document.getElementById('btnChangeUrl');
 
-            // --- State ---
-            let currentUrl = 'https://celinebee.cc.cd/document/sports.m3u';
-            let hls = null; // instance HLS.js
-            let isHlsReady = false;
+            let hls = null;
+            let isPlaying = false;
 
-            // --- Helper update status & log ---
-            function setStatus(state, message) {
-                // state: 'loading' | 'playing' | 'error' | 'idle'
-                statusDot.className = 'status-dot';
-                if (state === 'loading') {
-                    statusDot.classList.add('loading');
-                    statusText.textContent = message || 'Memuat...';
-                } else if (state === 'playing') {
-                    statusDot.classList.add('playing');
-                    statusText.textContent = message || 'Tayang';
-                } else if (state === 'error') {
-                    statusDot.classList.add('error');
-                    statusText.textContent = message || 'Error';
-                } else {
-                    // idle
-                    statusText.textContent = message || 'Siap';
-                }
+            // Utility: set status
+            function setStatus(type, msg) {
+                statusDot.className = 'dot';
+                if (type) statusDot.classList.add(type);
+                statusText.textContent = msg || '—';
             }
 
-            function setLog(msg, type) {
-                // type: 'error' | 'success' | ''
-                logEl.textContent = msg;
-                logEl.className = 'log-message';
-                if (type === 'error') logEl.classList.add('error');
-                else if (type === 'success') logEl.classList.add('success');
-                // jika tidak ada type, tetap netral
-            }
-
-            // --- Bersihkan HLS instance sebelumnya ---
+            // Hentikan & bersihkan HLS
             function destroyHls() {
                 if (hls) {
-                    hls.destroy();
+                    try {
+                        hls.destroy();
+                    } catch (_) {}
                     hls = null;
-                    isHlsReady = false;
                 }
-                // Hentikan semua pemutaran native jika ada
-                if (!video.paused) video.pause();
-                video.removeAttribute('src');
-                video.load(); // reset video
+                // Jangan hapus src video agar tetap ada frame terakhir
+                isPlaying = false;
             }
 
-            // --- Fungsi utama: muat stream HLS ---
-            function loadStream(url) {
-                // Validasi sederhana
-                if (!url || url.trim() === '') {
-                    setStatus('error', 'URL kosong');
-                    setLog('❌ URL tidak boleh kosong.', 'error');
-                    return;
-                }
-
-                // Bersihkan dulu
+            // Load stream menggunakan HLS.js
+            function loadStream() {
+                // Stop sebelumnya
                 destroyHls();
 
-                // Update display URL
-                urlDisplay.textContent = '🔗 ' + url;
-                currentUrl = url;
+                // Reset video
+                video.removeAttribute('src');
+                video.load();
 
-                setStatus('loading', 'Menyambung...');
-                setLog('⏳ Memuat stream: ' + url, '');
+                setStatus('loading', 'Memuat stream...');
 
-                // Cek apakah browser support MediaSource (HLS.js butuh itu)
-                if (!window.MediaSource) {
-                    setStatus('error', 'Browser tidak support');
-                    setLog('❌ Browser Anda tidak mendukung MediaSource (HLS.js tidak bisa berjalan).', 'error');
+                // Cek dukungan native HLS (Safari)
+                if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    // Native HLS (Safari, iOS)
+                    video.src = STREAM_URL;
+                    video.play().then(() => {
+                        isPlaying = true;
+                        setStatus('playing', '▶ Putar (Native HLS)');
+                    }).catch((err) => {
+                        setStatus('error', 'Gagal main native: ' + err.message);
+                        console.error('Native HLS error:', err);
+                    });
                     return;
                 }
 
-                // ---- Inisialisasi HLS.js ----
+                // Gunakan HLS.js untuk browser lain
+                if (!Hls.isSupported()) {
+                    setStatus('error', '⚠ Browser tidak mendukung HLS');
+                    return;
+                }
+
                 hls = new Hls({
-                    enableWorker: true, // pakai thread pekerja untuk performa
-                    lowLatencyMode: true, // cocok untuk live stream
-                    // tambahan parameter bila perlu
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backbufferLength: 30,
+                    maxBufferLength: 30,
                 });
 
-                // Pasang HLS ke video element
+                hls.loadSource(STREAM_URL);
                 hls.attachMedia(video);
 
-                // --- Event HLS ---
-                hls.on(Hls.Events.MEDIA_ATTACHED, function() {
-                    setLog('📡 Media terpasang, memuat playlist...', '');
-                    hls.loadSource(url);
-                });
-
                 hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    isHlsReady = true;
-                    setStatus('loading', 'Playlist siap, memutar...');
-                    setLog('✅ Manifest HLS berhasil diurai. Memulai pemutaran.', 'success');
-                    // Mulai putar otomatis
-                    video.play().catch(function(err) {
-                        // Autoplay diblokir? biarkan user klik play manual
-                        setLog('⚠️ Autoplay tidak diizinkan. Klik tombol play di video.', '');
-                        setStatus('idle', 'Klik play');
+                    video.play().then(() => {
+                        isPlaying = true;
+                        setStatus('playing', '▶ Putar (HLS.js)');
+                    }).catch((err) => {
+                        setStatus('error', 'Gagal play: ' + err.message);
+                        console.warn('Play error:', err);
                     });
                 });
 
-                hls.on(Hls.Events.LEVEL_LOADED, function() {
-                    // bisa dipakai untuk indikasi kualitas
-                });
-
                 hls.on(Hls.Events.ERROR, function(event, data) {
-                    // Jika error fatal, kita tampilkan
                     if (data.fatal) {
+                        setStatus('error', '⚠ Fatal: ' + (data.details || 'unknown'));
+                        console.error('HLS fatal error:', data);
+                        // Coba recover
                         switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
-                                setStatus('error', 'Error jaringan');
-                                setLog('❌ Fatal: Network error. Coba refresh atau periksa koneksi.', 'error');
+                                hls.startLoad();
                                 break;
                             case Hls.ErrorTypes.MEDIA_ERROR:
-                                setStatus('error', 'Error media');
-                                setLog('❌ Fatal: Media error. Mungkin stream rusak.', 'error');
+                                hls.recoverMediaError();
                                 break;
                             default:
-                                setStatus('error', 'Error HLS');
-                                setLog('❌ Fatal error: ' + data.details, 'error');
+                                destroyHls();
+                                setStatus('error', 'Gagal load stream');
+                                break;
                         }
-                        // recover dengan reload
-                        if (hls) hls.recoverMediaError();
                     } else {
-                        // non-fatal, tampilkan warning
-                        setLog('⚠️ Non-fatal error: ' + data.details, '');
+                        // Non-fatal
+                        setStatus('loading', '⏳ Buffering...');
+                        console.warn('HLS non-fatal:', data.details);
                     }
                 });
 
-                // Ketika video mulai bermain
-                video.addEventListener('playing', function onPlaying() {
-                    setStatus('playing', 'Tayang');
-                    setLog('▶️ Stream sedang berjalan.', 'success');
+                hls.on(Hls.Events.BUFFER_CREATED, function() {
+                    // Buffering mulai
                 });
 
-                // Ketika video pause
-                video.addEventListener('pause', function onPause() {
-                    if (video.readyState > 0) {
-                        setStatus('idle', 'Dijeda');
-                        setLog('⏸️ Pemutaran dijeda.', '');
+                hls.on(Hls.Events.FRAG_BUFFERED, function() {
+                    // Data mulai masuk
+                });
+
+                // Timeout jika loading terlalu lama
+                const timeout = setTimeout(() => {
+                    if (!isPlaying && hls) {
+                        setStatus('loading', '⏳ Loading lama, coba ulang...');
                     }
+                }, 15000);
+                // Clear saat berhasil
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    clearTimeout(timeout);
                 });
-
-                // Jika terjadi error pada video element (misal codec)
-                video.addEventListener('error', function(e) {
-                    const err = video.error;
-                    if (err) {
-                        setStatus('error', 'Video error');
-                        setLog('❌ Video error: code ' + err.code + ' - ' + err.message, 'error');
-                    }
-                });
-
-                // HLS.js selesai memuat
-                hls.on(Hls.Events.LEVEL_SWITCHED, function() {
-                    // opsional
-                });
-
-                // Jika HLS.js tidak support (misal browser sangat tua), fallback ke native
-                // Tapi HLS.js sudah support hampir semua browser modern.
-                // Kita bisa tambahkan fallback sederhana: jika Hls.isSupported() false
-                if (!Hls.isSupported()) {
-                    setStatus('error', 'HLS tidak support');
-                    setLog('❌ HLS.js bilang browser ini tidak support HLS.', 'error');
-                    destroyHls();
-                    return;
-                }
-
-                // Karena HLS.js mendukung, kita lanjut.
-                // Tapi jika browser sebenarnya support native HLS (Safari) dan kita tetap pakai HLS.js,
-                // tidak masalah. Tapi kita bisa memberi opsi native jika mau.
-                // Biarkan HLS.js tetap dipakai untuk konsistensi.
-
-                // Set timeout untuk indikasi jika terlalu lama
-                // (hanya untuk feedback)
             }
 
-            // --- Ganti URL via prompt ---
-            function promptChangeUrl() {
-                const newUrl = prompt('Masukkan URL stream HLS (m3u8 / m3u):', currentUrl);
-                if (newUrl !== null && newUrl.trim() !== '') {
-                    loadStream(newUrl.trim());
-                } else if (newUrl !== null) {
-                    setLog('⏭️ URL tidak diubah.', '');
-                }
+            // Stop stream
+            function stopStream() {
+                destroyHls();
+                // Hentikan video & kosongkan src
+                video.pause();
+                video.removeAttribute('src');
+                video.load();
+                isPlaying = false;
+                setStatus('', '⏹ Berhenti');
             }
 
-            // --- Inisialisasi pertama kali ---
-            function init() {
-                // Tampilkan URL di panel
-                urlDisplay.textContent = '🔗 ' + currentUrl;
-                setStatus('idle', 'Siap');
-                setLog('💡 Siap memutar. Klik "Muat Ulang" atau tombol play di video.', '');
-
-                // Jika autoplay dengan muted, kita coba load langsung
-                // (karena video sudah ada attribute autoplay muted)
-                // Tapi lebih baik kita muat stream setelah user klik atau otomatis.
-                // Kita muat otomatis dengan sedikit delay agar DOM siap.
-                setTimeout(function() {
-                    loadStream(currentUrl);
+            // Reload (refresh)
+            function reloadStream() {
+                stopStream();
+                // Tunggu sebentar lalu load ulang
+                setTimeout(() => {
+                    loadStream();
                 }, 300);
             }
 
-            // --- Event listeners untuk tombol ---
-            btnLoad.addEventListener('click', function() {
-                loadStream(currentUrl);
-            });
-
-            btnChangeUrl.addEventListener('click', promptChangeUrl);
-
-            // Klik pada URL display juga bisa ganti URL (opsional)
-            urlDisplay.addEventListener('click', function() {
-                if (window.getSelection().toString() === '') {
-                    promptChangeUrl();
+            // ---------- EVENT LISTENER ----------
+            document.getElementById('btnPlay').addEventListener('click', function() {
+                // Jika sudah berhenti atau error, load ulang
+                if (!isPlaying) {
+                    loadStream();
+                } else {
+                    // Jika sedang pause, resume
+                    if (video.paused) {
+                        video.play().catch(() => {});
+                    }
                 }
             });
 
-            // --- Mulai ---
-            init();
+            document.getElementById('btnStop').addEventListener('click', stopStream);
 
-            // Cleanup saat halaman ditutup (opsional)
-            window.addEventListener('beforeunload', function() {
-                if (hls) {
-                    hls.destroy();
-                    hls = null;
+            document.getElementById('btnReload').addEventListener('click', reloadStream);
+
+            // Tampilkan URL di bar (dipotong)
+            urlDisplay.textContent = '📡 ' + STREAM_URL.replace(/^https?:\/\//, '').split('/')[0];
+
+            // Auto-load saat halaman dibuka
+            window.addEventListener('load', function() {
+                // Tunggu sebentar agar DOM siap
+                setTimeout(loadStream, 500);
+            });
+
+            // Handle visibility change - jika tab di-hidden, tidak reload otomatis
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden && hls && !isPlaying) {
+                    // Jika kembali ke tab dan stream mati, coba reload
+                    // Tapi biarkan user yang klik play
                 }
             });
+
+            // Jika video error karena network
+            video.addEventListener('error', function(e) {
+                if (!hls) {
+                    setStatus('error', 'Video error: ' + (e.message || 'unknown'));
+                }
+            });
+
+            console.log('📺 Pemutar HLS siap. URL:', STREAM_URL);
+            console.log('🔧 Gunakan tombol Play/Stop/Reload untuk kontrol.');
 
         })();
     </script>
+
 </body>
 </html>
