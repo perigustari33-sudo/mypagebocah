@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deteksi WebView & Referer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .success { color: green; }
+        .danger { color: red; }
+        .info { color: blue; }
+        pre {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Deteksi WebView & Referer</h1>
+    
+    <div class="box" id="result">
+        <h2>Hasil Deteksi:</h2>
+        <div id="output">Loading...</div>
+    </div>
+
+    <div class="box">
+        <h3>📋 Informasi Detail:</h3>
+        <pre id="details">Loading...</pre>
+    </div>
+
+    <div class="box">
+        <button onclick="checkAgain()">🔄 Cek Ulang</button>
+        <button onclick="redirectToChrome()" id="redirectBtn" style="background:#ff5722;">🚀 Buka di Chrome</button>
+    </div>
+
+    <script>
+        // ============================================
+        // 1. DETEKSI REFERER
+        // ============================================
+        function getReferer() {
+            return document.referrer || 'Tidak ada referer (direct access)';
+        }
+
+        // ============================================
+        // 2. DETEKSI WEBVIEW (dari Sec-CH-UA)
+        // ============================================
+        function isWebView() {
+            // Method 1: Dari navigator.userAgentData (Client Hints)
+            if (navigator.userAgentData) {
+                const brands = navigator.userAgentData.brands || [];
+                const hasWebView = brands.some(brand => 
+                    brand.brand.toLowerCase().includes('webview')
+                );
+                if (hasWebView) return true;
+            }
+            
+            // Method 2: Dari navigator.userAgent (fallback)
+            const ua = navigator.userAgent.toLowerCase();
+            return ua.includes('webview') || 
+                   ua.includes('wv') || 
+                   (ua.includes('android') && ua.includes('version/')) ||
+                   ua.includes('; wv)');
+        }
+
+        // ============================================
+        // 3. DETEKSI DARI REFERER (WebView biasanya dari app)
+        // ============================================
+        function isFromWebViewApp() {
+            const referer = document.referrer.toLowerCase();
+            
+            // Referer dari aplikasi yang biasanya pakai WebView
+            const appPatterns = [
+                'instagram',
+                'facebook', 
+                'twitter',
+                'tiktok',
+                'whatsapp',
+                'telegram',
+                'line',
+                'wechat',
+                'linkedin',
+                'pinterest',
+                'reddit',
+                'snapchat',
+                'discord',
+                'android-app',
+                'com.google.android'
+            ];
+            
+            return appPatterns.some(pattern => referer.includes(pattern));
+        }
+
+        // ============================================
+        // 4. DETEKSI PLATFORM
+        // ============================================
+        function getPlatform() {
+            const ua = navigator.userAgent.toLowerCase();
+            if (ua.includes('android')) return 'Android';
+            if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) return 'iOS';
+            if (ua.includes('windows')) return 'Windows';
+            if (ua.includes('mac')) return 'MacOS';
+            if (ua.includes('linux')) return 'Linux';
+            return 'Unknown';
+        }
+
+        // ============================================
+        // 5. REDIRECT KE CHROME
+        // ============================================
+        function redirectToChrome() {
+            const currentUrl = window.location.href;
+            const platform = getPlatform().toLowerCase();
+            const isWebViewDetected = isWebView();
+            const isFromApp = isFromWebViewApp();
+            
+            console.log(`🔍 Redirecting to Chrome...`);
+            console.log(`- URL: ${currentUrl}`);
+            console.log(`- Platform: ${platform}`);
+            console.log(`- WebView: ${isWebViewDetected}`);
+            console.log(`- From App: ${isFromApp}`);
+            
+            if (platform === 'android') {
+                // Android: Intent ke Chrome
+                const urlWithoutProtocol = currentUrl.replace(/^https?:\/\//, '');
+                const intentUrl = `intent://${urlWithoutProtocol}#Intent;scheme=https;package=com.android.chrome;end`;
+                console.log(`📱 Intent: ${intentUrl}`);
+                window.location.replace(intentUrl);
+            } else if (platform === 'ios') {
+                // iOS: URL Scheme Chrome
+                const chromeUrl = currentUrl.replace(/^https?:\/\//, 'googlechrome://');
+                window.location.replace(chromeUrl);
+                // Fallback ke App Store
+                setTimeout(() => {
+                    window.location.replace('https://apps.apple.com/app/google-chrome/id535886823');
+                }, 1000);
+            } else {
+                // Desktop: Download Chrome
+                window.location.replace('https://www.google.com/chrome/');
+            }
+        }
+
+        // ============================================
+        // 6. TAMPILKAN HASIL
+        // ============================================
+        function showResults() {
+            const referer = getReferer();
+            const platform = getPlatform();
+            const isWebViewDetected = isWebView();
+            const isFromApp = isFromWebViewApp();
+            const shouldRedirect = isWebViewDetected || isFromApp;
+            
+            // Output utama
+            const output = document.getElementById('output');
+            let statusHtml = '';
+            
+            if (shouldRedirect) {
+                statusHtml = `
+                    <div class="danger">
+                        ⚠️ <strong>TERDETEKSI WEBVIEW!</strong><br>
+                        ${isWebViewDetected ? '✅ Detected dari User-Agent' : ''}
+                        ${isFromApp ? '✅ Detected dari Referer' : ''}
+                        <br><br>
+                        <button onclick="redirectToChrome()" style="background:#ff5722;color:white;padding:10px 20px;border:none;border-radius:5px;font-size:16px;">
+                            🚀 Buka di Chrome Sekarang
+                        </button>
+                    </div>
+                `;
+            } else {
+                statusHtml = `
+                    <div class="success">
+                        ✅ <strong>BUKAN WEBVIEW</strong><br>
+                        Browser normal terdeteksi
+                    </div>
+                `;
+            }
+            output.innerHTML = statusHtml;
+            
+            // Detail lengkap
+            const details = document.getElementById('details');
+            details.innerHTML = `
+📌 INFORMASI DETEKSI
+═══════════════════════════════
+
+🔗 REFERER
+${referer}
+
+📱 PLATFORM
+${platform}
+
+🌐 USER AGENT
+${navigator.userAgent}
+
+🔍 DETEKSI WEBVIEW
+- Dari Client Hints: ${navigator.userAgentData ? '✅ Support' : '❌ Tidak Support'}
+- Dari User-Agent: ${isWebViewDetected ? '✅ Terdeteksi' : '❌ Tidak'}
+- Dari Referer: ${isFromApp ? '✅ Terdeteksi (dari app)' : '❌ Tidak'}
+
+${shouldRedirect ? '⚠️ AKAN DI-REDIRECT KE CHROME' : '✅ AMAN (bukan WebView)'}
+
+📊 URL SAAT INI
+${window.location.href}
+            `;
+        }
+
+        // ============================================
+        // 7. FUNGSI CEK ULANG
+        // ============================================
+        function checkAgain() {
+            showResults();
+            console.log('🔄 Cek ulang selesai');
+        }
+
+        // ============================================
+        // 8. EKSEKUSI OTOMATIS (IIFE)
+        // ============================================
+        (function() {
+            console.log('🚀 Halaman dimuat, mendeteksi...');
+            showResults();
+            
+            // Auto redirect jika terdeteksi WebView
+            const shouldRedirect = isWebView() || isFromWebViewApp();
+            if (shouldRedirect) {
+                console.log('⚠️ WebView terdeteksi! Redirect dalam 3 detik...');
+                // Tampilkan countdown
+                let countdown = 3;
+                const output = document.getElementById('output');
+                const timer = setInterval(() => {
+                    if (countdown > 0) {
+                        output.innerHTML += `<br><span style="color:orange;">⏳ Redirect dalam ${countdown} detik...</span>`;
+                        countdown--;
+                    } else {
+                        clearInterval(timer);
+                        redirectToChrome();
+                    }
+                }, 1000);
+            }
+        })();
+
+        // Expose ke global untuk tombol
+        window.redirectToChrome = redirectToChrome;
+        window.checkAgain = checkAgain;
+        window.isWebView = isWebView;
+        window.isFromWebViewApp = isFromWebViewApp;
+        window.getPlatform = getPlatform;
+    </script>
+</body>
+  </html>
