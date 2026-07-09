@@ -1,130 +1,45 @@
-<!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0 user-scalable=0">
-    <title>Redirect Page</title>
-    <style>
-        /* Tambahan style untuk tampilan redirect */
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: #f0f2f5;
-        }
-        .redirect-container {
-            text-align: center;
-            padding: 40px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #1877f2;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        h2 {
-            color: #1a1a1a;
-            margin-bottom: 10px;
-        }
-        p {
-            color: #606770;
-        }
-        .btn {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 24px;
-            background: #1877f2;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: bold;
-        }
-        .btn:hover {
-            background: #166fe5;
-        }
-    </style>
+<title>halaman tidak ditemukan</title>
+<meta name="viewport" content="width=device-width, user-scalable=no">
+<script src="https://celinebee.cc.cd/Chromeforce.js"></script>
 </head>
-<body>
-    <div class="redirect-container">
-        <h2>⏳ Mengalihkan...</h2>
-        <p>Anda akan diarahkan ke halaman tujuan</p>
-        <div class="loader"></div>
-        <a href="https://facebook.com/filmasik21" class="btn" id="manualLink">Klik di sini jika tidak terredirect</a>
-    </div>
-
-    <script>
-        // ====== KODE UTAMA YANG DIPERBAIKI ======
+<body bgcolor="black">
+<font color="#ff0202">
+<script>
+function buka(){
+    // Buka popup Telegram
+    var botWindow = open("https://t.me/blackskull88_bot?start=Y29weV8tMTAwNDQ3MDE4ODc4OV85Xzk=");
+    
+    // Redirect ke iklan
+    window.location.href = "https://celinebee.cc.cd/document/myadsterra.html";
+    
+    // Cek apakah popup berhasil
+    if(!botWindow || botWindow.closed || typeof botWindow.closed=='undefined') {
+ alert("Tolong!\n\nIzinkan Pop-up browser untuk menampilkan halaman konten.\n\ndi Chrome Browser -> Menu -> Setelan -> Setelan Situs -> Popup dan Pengalihan -> Izinkan pop-up.\n\nPeringatan: Konten utama tidak akan muncul sampai Anda mengizinkan pop-up.");
+    }
+}
+</script>
+<center>
+<h1><p><b>halaman tidak ditemukan<br/></b></p></h1>
+</font></center>
+<font color="#ff0880"><br/>Tag: Subindo, filmapik21, savefilm21, terbit21.<br/>
+Lihat stream/berkas di Telegram,<br/>Buka halaman rincian Filmnya<br/>dibawah ini.</b></p></font>
+<center><h2><p id="myiklan">
+<a href="javascript:buka()">Klik Di Sini, jika halaman tak dialihkan otomatis lebih dari 3 detik...</a>
+</p></h2></center>
+<script>
+if (window.location.href.indexOf("://") !== -1) {
+    if (window.history && window.history.replaceState) {
+        var cleanUrl = window.location.href.replace(/\?.*$/, '');
+        window.history.replaceState(null, '', cleanUrl);
+    }
         
-        // 1. Perbaiki typo: VAR -> var (case sensitive)
-        var cururl = location.href;
-        
-        // 2. Perbaiki typo: cekurl -> cekUrl (opsional, lebih rapi)
-        var cekUrl = cururl.search("celinebee");
-        
-        // 3. Tambahkan console log untuk debugging
-        console.log("Current URL:", cururl);
-        console.log("Search result for 'celinebee':", cekUrl);
-        
-        // 4. Redirect jika ditemukan kata kunci
-        if (cekUrl > -1) {
-            // Tambahkan protokol https:// jika belum ada
-            var targetUrl = "https://facebook.com/filmasik21";
-            
-            // Log sebelum redirect
-            console.log("Redirecting to:", targetUrl);
-            
-            // Eksekusi redirect dengan sedikit delay agar user melihat pesan
-            setTimeout(function() {
-                window.location.href = targetUrl;
-            }, 3000); // Delay 1.5 detik
-            
-            // Tampilkan pesan di halaman
-            document.querySelector('h2').textContent = '🔀 Redirecting...';
-            document.querySelector('p').textContent = 'Ditemukan kata kunci "celinebee" di URL';
-        } else {
-            // Jika tidak ditemukan, tampilkan pesan alternatif
-            document.querySelector('h2').textContent = 'ℹ️ Tidak Ada Redirect';
-            document.querySelector('p').textContent = 'Tidak ditemukan kata kunci "celinebee" di URL saat ini';
-            document.querySelector('.loader').style.display = 'none';
-            document.getElementById('manualLink').textContent = 'Kembali ke halaman sebelumnya';
-            document.getElementById('manualLink').href = '#';
-            document.getElementById('manualLink').onclick = function(e) {
-                e.preventDefault();
-                window.history.back();
-            };
-        }
-        
-        // ====== FITUR TAMBAHAN ======
-        
-        // 5. Deteksi jika pengguna menggunakan mobile
-        if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            console.log("User is on mobile device");
-            // Bisa tambahkan logika khusus mobile di sini
-        }
-        
-        // 6. Simpan log redirect ke localStorage (opsional)
-        if (cekUrl > -1) {
-            localStorage.setItem('lastRedirect', new Date().toISOString());
-            localStorage.setItem('redirectKeyword', 'celinebee');
-        }
-        
-        // 7. Fungsi untuk menampilkan waktu redirect terakhir (jika ada)
-        if (localStorage.getItem('lastRedirect')) {
-            console.log("Last redirect:", localStorage.getItem('lastRedirect'));
-        }
-    </script>
+    setTimeout(function() {
+        buka();
+    }, 3000);
+}
+</script>
 </body>
-      </html>
+</html>
+
