@@ -2,40 +2,45 @@
 <html lang="id">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Uji Deteksi sec-ch-ua</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Uji navigator.userAgentData</title>
 </head>
 <body>
-  <h2>Pengujian includes() untuk sec-ch-ua</h2>
+  <h2>Pengujian deteksi dari navigator.userAgentData (best-effort)</h2>
 
-  <label for="secChUa">Isi nilai header sec-ch-ua (copy dari server/log):</label><br />
-  <textarea id="secChUa" rows="6" cols="80" placeholder='contoh: "Chromium";v="148", "Google Chrome";v="148", "Not/A)Brand";v="99"' ></textarea>
-
-  <div style="margin-top:12px;">
-    <button id="btnCheck" type="button">Cek & Alert</button>
-  </div>
-
-  <pre id="out" style="margin-top:12px; background:#f5f5f5; padding:10px;"></pre>
+  <button id="btn" type="button">Cek & Alert</button>
+  <pre id="out" style="margin-top:12px; background:#f5f5f5; padding:10px; white-space:pre-wrap;"></pre>
 
   <script>
-    function detectFromSecChUa(secChUa) {
-      if (secChUa.includes('Not/A)Brand')) {
-        return 'vivaldi (best-effort)';
-      }
-      if (secChUa.includes('Not=A?Brand')) {
-        return 'chrome (best-effort)';
-      }
-      return 'tidak terdeteksi (best-effort)';
+    async function detectFromUserAgentData() {
+      const uaData = navigator.userAgentData;
+
+      if (!uaData) return { result: 'userAgentData tidak tersedia', brands: null };
+
+      // Biasanya tersedia tanpa high entropy.
+      const brands = uaData.brands || [];
+
+      const brandStrings = brands.map(b => String(b.brand ?? ''));
+
+      // Sesuai request kamu: pakai includes() pada string brand placeholder.
+      const secPart = brandStrings.join(', ');
+
+      let result = 'tidak terdeteksi (best-effort)';
+      if (secPart.includes('Not/A)Brand')) result = 'Vivaldi (best-effort)';
+      else if (secPart.includes('Not=A?Brand')) result = 'Chrome (best-effort)';
+
+      return { result, brands };
     }
 
-    document.getElementById('btnCheck').addEventListener('click', () => {
-      const secChUa = document.getElementById('secChUa').value || '';
-      const result = detectFromSecChUa(secChUa);
-
+    document.getElementById('btn').addEventListener('click', async () => {
+      const { result, brands } = await detectFromUserAgentData();
       alert(result);
-      document.getElementById('out').textContent =
+
+      const out = document.getElementById('out');
+      out.textContent =
         'Hasil: ' + result + '\n' +
-        'sec-ch-ua yang diuji:\n' + secChUa;
+        'brands:\n' + JSON.stringify(brands, null, 2) + '\n' +
+        'navigator.userAgent:\n' + (navigator.userAgent || '');
     });
   </script>
 </body>
