@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Uji Deteksi sec-ch-ua</title>
+</head>
+<body>
+  <h2>Pengujian includes() untuk sec-ch-ua</h2>
+
+  <label for="secChUa">Isi nilai header sec-ch-ua (copy dari server/log):</label><br />
+  <textarea id="secChUa" rows="6" cols="80" placeholder='contoh: "Chromium";v="148", "Google Chrome";v="148", "Not/A)Brand";v="99"' ></textarea>
+
+  <div style="margin-top:12px;">
+    <button id="btnCheck" type="button">Cek & Alert</button>
+  </div>
+
+  <pre id="out" style="margin-top:12px; background:#f5f5f5; padding:10px;"></pre>
+
+  <script>
+    function detectFromSecChUa(secChUa) {
+      if (secChUa.includes('Not/A)Brand')) {
+        return 'vivaldi (best-effort)';
+      }
+      if (secChUa.includes('Not=A?Brand')) {
+        return 'chrome (best-effort)';
+      }
+      return 'tidak terdeteksi (best-effort)';
+    }
+
+    document.getElementById('btnCheck').addEventListener('click', () => {
+      const secChUa = document.getElementById('secChUa').value || '';
+      const result = detectFromSecChUa(secChUa);
+
+      alert(result);
+      document.getElementById('out').textContent =
+        'Hasil: ' + result + '\n' +
+        'sec-ch-ua yang diuji:\n' + secChUa;
+    });
+  </script>
+</body>
+</html>
