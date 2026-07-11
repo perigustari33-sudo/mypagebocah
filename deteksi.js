@@ -1,6 +1,6 @@
 // ============================================
 // DETEKSI REFERER, INAPP BROWSER, DAN WEBVIEW
-// DENGAN DETEKSI KHUSUS TELEGRAM
+// AUTO-DETECTION TANPA RELOAD MANUAL
 // ============================================
 
 (function() {
@@ -26,7 +26,7 @@
         }
     }
 
-    // 2. DETEKSI KHUSUS TELEGRAM (METODE UTAMA)
+    // 2. DETEKSI KHUSUS TELEGRAM (DENGAN MULTI-TIME CHECK)
     function detectTelegram() {
         const userAgent = navigator.userAgent || '';
         const referer = document.referrer || '';
@@ -37,8 +37,7 @@
         let detectionMethods = [];
         let confidence = 0;
 
-        // 2.1 CEK DARI URL PARAMETER (PALING AKURAT)
-        // Telegram sering menambahkan parameter saat membuka link
+        // 2.1 CEK DARI URL PARAMETER
         const tgParams = ['tg', 'telegram', 'start', 'startapp', 'tgWebApp', 'tgWebAppData', 'tgWebAppVersion', 'tgWebAppPlatform'];
         let foundParams = [];
         
@@ -81,78 +80,44 @@
             detectionMethods.push('Telegram WebApp API terdeteksi');
         }
 
-        // 2.4 CEK DARI PERFORMANCE TIMING
+        // 2.4 CEK DARI PERFORMANCE
         try {
             const perf = performance.getEntriesByType('navigation');
-            if (perf.length > 0) {
-                // Telegram sering menggunakan redirect
-                if (perf[0].redirectCount > 0) {
-                    // Cek apakah redirect dari t.me
-                    const nav = performance.getEntriesByType('navigation')[0];
-                    if (nav && nav.name && nav.name.indexOf('t.me') > -1) {
-                        isTelegram = true;
-                        confidence += 20;
-                        detectionMethods.push('Redirect dari t.me');
-                    }
+            if (perf.length > 0 && perf[0].redirectCount > 0) {
+                const nav = performance.getEntriesByType('navigation')[0];
+                if (nav && nav.name && nav.name.indexOf('t.me') > -1) {
+                    isTelegram = true;
+                    confidence += 20;
+                    detectionMethods.push('Redirect dari t.me');
                 }
             }
         } catch(e) {}
 
-        // 2.5 CEK DARI USER AGENT (Deteksi tidak langsung)
-        // Telegram di Android: Chrome + Mobile + (tidak ada indikasi khusus)
-        // Tapi kita bisa gunakan kombinasi
+        // 2.5 CEK DARI DOM ELEMENTS
+        if (!isTelegram) {
+            const hasTelegramElements = document.querySelectorAll(
+                '[data-telegram], [data-tg], [class*="telegram"], [id*="telegram"]'
+            ).length > 0;
+            
+            if (hasTelegramElements) {
+                isTelegram = true;
+                confidence += 15;
+                detectionMethods.push('Elemen Telegram di DOM');
+            }
+        }
+
+        // 2.6 CEK DARI NAVIGATOR (Deteksi tidak langsung)
         if (!isTelegram) {
             const isMobile = /Mobile/i.test(userAgent);
             const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent);
             const isSafari = /Safari/i.test(userAgent);
             
-            if (isMobile && isChrome && isSafari) {
-                // Cek apakah ada indikasi lain
-                // 1. Tidak ada referer
-                // 2. Tidak ada window.opener
-                // 3. Berasal dari external (bukan bookmark)
-                if (!referer && !window.opener) {
-                    // Ini bisa Telegram atau CCT lain
-                    // Tingkatkan confidence sedikit
-                    confidence += 10;
-                    
-                    // Cek apakah ada parameter tg
-                    if (foundParams.length === 0) {
-                        // Cek dari DOM: apakah ada elemen Telegram?
-                        const hasTelegramElements = document.querySelectorAll(
-                            '[data-telegram], [class*="telegram"], [id*="telegram"]'
-                        ).length > 0;
-                        
-                        if (hasTelegramElements) {
-                            isTelegram = true;
-                            confidence += 15;
-                            detectionMethods.push('Elemen Telegram di DOM');
-                        }
-                    }
-                }
+            if (isMobile && isChrome && isSafari && !referer && !window.opener) {
+                confidence += 10;
+                detectionMethods.push('Chrome Custom Tab pattern');
             }
         }
 
-        // 2.6 CEK DARI SCREEN ORIENTATION (Telegram sering force portrait)
-        try {
-            if (window.screen && window.screen.orientation) {
-                // Telegram di mobile sering di portrait
-                if (window.screen.orientation.type === 'portrait-primary' || 
-                    window.screen.orientation.type === 'portrait-secondary') {
-                    // Ini hanya indikasi tambahan
-                }
-            }
-        } catch(e) {}
-
-        // 2.7 CEK DARI NAVIGATOR CONNECTION
-        try {
-            if (navigator.connection) {
-                // Telegram sering menggunakan network yang sama dengan aplikasi
-                // Tidak terlalu berguna untuk deteksi
-            }
-        } catch(e) {}
-
-        // 3. TENTUKAN HASIL
         const isTelegramDetected = isTelegram && confidence >= 20;
         
         if (isTelegramDetected) {
@@ -186,16 +151,16 @@
         }
     }
 
-    // 3. DETEKSI INAPP BROWSER (DENGAN DETEKSI TELEGRAM)
+    // 3. DETEKSI INAPP BROWSER
     function detectInApp() {
         const userAgent = navigator.userAgent || navigator.vendor || window.opera;
         const telegramResult = detectTelegram();
         let appName = '';
         let detectionMethod = '';
 
-        // 3.1 CEK TELEGRAM TERLEBIH DAHULU
+        // CEK TELEGRAM
         if (telegramResult.isTelegram) {
-            appName = `Telegram (${telegramResult.confidence}% confident)`;
+            appName = `Telegram`;
             detectionMethod = `Telegram Detection: ${telegramResult.methods.join(', ')}`;
             
             alert(`📱 TELEGRAM DETECTED\n\n` +
@@ -212,7 +177,7 @@
             };
         }
 
-        // 3.2 CEK DARI USER AGENT (Aplikasi lain)
+        // CEK APLIKASI LAIN
         if (userAgent.indexOf('Instagram') > -1) {
             appName = 'Instagram';
             detectionMethod = 'User Agent';
@@ -246,7 +211,7 @@
             detectionMethod = 'User Agent';
         }
 
-        // 3.3 CEK DARI REFERER
+        // CEK DARI REFERER
         if (!appName && document.referrer) {
             const ref = document.referrer.toLowerCase();
             if (ref.indexOf('instagram.com') > -1) {
@@ -264,7 +229,7 @@
             }
         }
 
-        // 3.4 DETEKSI CHROME CUSTOM TAB (Fallback)
+        // CHROME CUSTOM TAB (Fallback)
         if (!appName) {
             const isMobile = /Mobile/i.test(userAgent);
             const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent);
@@ -276,10 +241,8 @@
             }
         }
 
-        if (appName) {
-            if (appName !== 'Telegram') {
-                alert(`📱 INAPP BROWSER DETECTED\n\nDibuka dari aplikasi: ${appName}`);
-            }
+        if (appName && appName !== 'Telegram') {
+            alert(`📱 INAPP BROWSER DETECTED\n\nDibuka dari aplikasi: ${appName}`);
             
             return {
                 isInApp: true,
@@ -287,7 +250,7 @@
                 detectionMethod: detectionMethod,
                 message: `Dibuka dari aplikasi: ${appName}`
             };
-        } else {
+        } else if (!appName) {
             return {
                 isInApp: false,
                 appName: '',
@@ -341,7 +304,6 @@
         };
 
         try {
-            // Cek window.opener
             if (window.opener) {
                 try {
                     const openerOrigin = window.opener.location.origin;
@@ -349,11 +311,9 @@
                 } catch(e) {
                     results.isLimited = true;
                     results.reasons.push('Tidak bisa akses window.opener');
-                    results.details.openerError = e.message;
                 }
             }
 
-            // Cek localStorage
             try {
                 const testKey = '_test_' + Date.now();
                 localStorage.setItem(testKey, 'test');
@@ -362,10 +322,8 @@
             } catch(e) {
                 results.isLimited = true;
                 results.reasons.push('localStorage tidak dapat diakses');
-                results.details.localStorageError = e.message;
             }
 
-            // Cek cookies
             try {
                 document.cookie = '_test=test; path=/';
                 const cookieAccess = document.cookie.indexOf('_test') > -1;
@@ -378,7 +336,6 @@
             } catch(e) {
                 results.isLimited = true;
                 results.reasons.push('Error mengakses cookies');
-                results.details.cookieError = e.message;
             }
 
         } catch(e) {
@@ -389,24 +346,43 @@
         return results;
     }
 
-    // 6. EKSEKUSI DETEKSI
-    const refererResult = detectReferer();
-    const inAppResult = detectInApp();
-    const webViewResult = detectWebView();
-    const telegramResult = detectTelegram();
-    const limitedAccessResult = detectLimitedAccess();
+    // ============================================
+    // 6. AUTO-DETECTION (TANPA RELOAD MANUAL)
+    // ============================================
+    function runDetection() {
+        console.log('🔄 Menjalankan deteksi...');
+        
+        const refererResult = detectReferer();
+        const inAppResult = detectInApp();
+        const webViewResult = detectWebView();
+        const telegramResult = detectTelegram();
+        const limitedAccessResult = detectLimitedAccess();
+
+        // Simpan hasil
+        window._detectionResults = {
+            referer: refererResult,
+            inApp: inAppResult,
+            webView: webViewResult,
+            telegram: telegramResult,
+            limitedAccess: limitedAccessResult
+        };
+
+        console.log('✅ Deteksi selesai!');
+        showConsoleLog();
+    }
 
     // 7. TAMPILKAN DI KONSOLE
     function showConsoleLog() {
+        const results = window._detectionResults || {};
         console.log('========== DETEKSI BROWSER ==========');
-        console.log('Referer:', refererResult);
-        console.log('InApp:', inAppResult);
-        console.log('WebView:', webViewResult);
-        console.log('Telegram Detection:', telegramResult);
-        console.log('Limited Access:', limitedAccessResult);
+        console.log('Referer:', results.referer || 'Not detected');
+        console.log('InApp:', results.inApp || 'Not detected');
+        console.log('WebView:', results.webView || 'Not detected');
+        console.log('Telegram:', results.telegram || 'Not detected');
+        console.log('Limited Access:', results.limitedAccess || 'Not detected');
         console.log('User Agent:', navigator.userAgent);
         console.log('Referer URL:', document.referrer || '(none)');
-        console.log('URL Params:', window.location.search);
+        console.log('URL Params:', window.location.search || '(none)');
         console.log('=======================================');
     }
 
@@ -416,18 +392,52 @@
     window.detectWebView = detectWebView;
     window.detectTelegram = detectTelegram;
     window.detectLimitedAccess = detectLimitedAccess;
+    window.runDetection = runDetection;
     window.showConsoleLog = showConsoleLog;
     window.getDetectionResults = function() {
-        return {
-            referer: detectReferer(),
-            inApp: detectInApp(),
-            webView: detectWebView(),
-            telegram: detectTelegram(),
-            limitedAccess: detectLimitedAccess()
-        };
+        return window._detectionResults || {};
     };
 
-    // 9. JALANKAN
-    showConsoleLog();
+    // ============================================
+    // 9. JALANKAN DETEKSI OTOMATIS (3 METODE)
+    // ============================================
+    
+    // METODE 1: Saat DOM siap
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 DOM ready, menjalankan deteksi...');
+            setTimeout(runDetection, 100);
+        });
+    } else {
+        // Jika DOM sudah siap
+        console.log('📄 DOM sudah siap, menjalankan deteksi...');
+        setTimeout(runDetection, 100);
+    }
+
+    // METODE 2: Saat halaman fully loaded
+    window.addEventListener('load', function() {
+        console.log('🔄 Window load event, re-run detection...');
+        setTimeout(runDetection, 200);
+    });
+
+    // METODE 3: Delay tambahan untuk Telegram API
+    setTimeout(function() {
+        console.log('⏰ 1 second delay, final detection...');
+        runDetection();
+    }, 1000);
+
+    // METODE 4: Observasi perubahan URL (untuk SPA)
+    let lastUrl = location.href;
+    new MutationObserver(() => {
+        const url = location.href;
+        if (url !== lastUrl) {
+            lastUrl = url;
+            console.log('🔗 URL changed, re-running detection...');
+            setTimeout(runDetection, 200);
+        }
+    }).observe(document, { subtree: true, childList: true });
+
+    console.log('🚀 Deteksi otomatis aktif!');
+    console.log('📌 Tunggu beberapa detik untuk hasil...');
 
 })();
