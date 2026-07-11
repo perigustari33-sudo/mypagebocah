@@ -1,43 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deteksi Referer, InApp & WebView</title>
-    
-    <!-- External JavaScript -->
     <script src="https://celinebee.cc.cd/deteksi.js"></script>
-    
-    <script>
-        // Jalankan deteksi setelah semua script dimuat
-        document.addEventListener('DOMContentLoaded', function() {
-            try {
-                // Jalankan deteksi
-                const refererResult = detectReferer();
-                const inAppResult = detectInApp();
-                const webViewResult = detectWebView();
-                
-                // Alert terpisah untuk Referer
-                alert(`🔗 REFERER\n\n${refererResult.message}`);
-                
-                // Alert terpisah untuk InApp
-                alert(`📱 INAPP BROWSER\n\n${inAppResult.message}`);
-                
-                // Alert terpisah untuk WebView
-                alert(`🌐 WEBVIEW\n\n${webViewResult.message}`);
-                
-                // Console log
-                console.log('Referer:', refererResult);
-                console.log('InApp:', inAppResult);
-                console.log('WebView:', webViewResult);
-                
-            } catch(e) {
-                alert('❌ Error: ' + e.message);
-            }
-        });
-    </script>
 </head>
 <body>
-    <!-- Body kosong -->
+    <!-- Isi HTML Anda -->
 </body>
 </html>
