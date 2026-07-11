@@ -1,61 +1,36 @@
 // ============================================
-// DETEKSI CCT DENGAN chrome://version DAN WEBVIEW
+// DETEKSI CCT DENGAN window.open chrome://version/
 // ============================================
 
 (function() {
     
-    // 1. DETEKSI CHROME PROTOCOL (METODE 1)
-    let isChromeProtocolAccessible = null;
-    
+    // 1. DETEKSI CHROME PROTOCOL (METODE UTAMA)
     function detectChromeProtocol() {
-        return new Promise((resolve) => {
-            // Cek apakah sudah diuji sebelumnya
-            if (isChromeProtocolAccessible !== null) {
-                resolve(isChromeProtocolAccessible);
-                return;
-            }
-
-            try {
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = 'chrome://version';
-                
-                let isLoaded = false;
-                
-                iframe.onload = function() {
-                    isLoaded = true;
-                    isChromeProtocolAccessible = true;
-                    document.body.removeChild(iframe);
-                    resolve(true);
-                };
-                
-                iframe.onerror = function() {
-                    isChromeProtocolAccessible = false;
-                    document.body.removeChild(iframe);
-                    resolve(false);
-                };
-                
-                // Timeout 3 detik
+        try {
+            // Coba buka chrome://version/ di tab baru
+            const newWindow = window.open('chrome://version/', '_blank');
+            
+            if (newWindow) {
+                // Berhasil dibuka - kemungkinan Chrome asli
                 setTimeout(() => {
-                    if (!isLoaded) {
-                        if (document.body.contains(iframe)) {
-                            document.body.removeChild(iframe);
-                        }
-                        isChromeProtocolAccessible = false;
-                        resolve(false);
+                    try {
+                        newWindow.close();
+                    } catch(e) {
+                        // Tidak bisa close, tapi tetap dianggap berhasil
                     }
-                }, 3000);
-                
-                document.body.appendChild(iframe);
-                
-            } catch(e) {
-                isChromeProtocolAccessible = false;
-                resolve(false);
+                }, 100);
+                return true;
+            } else {
+                // Gagal dibuka - kemungkinan CCT/WebView
+                return false;
             }
-        });
+        } catch(e) {
+            // Error saat mencoba membuka - kemungkinan CCT/WebView
+            return false;
+        }
     }
 
-    // 2. DETEKSI WEBVIEW (METODE 2)
+    // 2. DETEKSI WEBVIEW (METODE KEDUA)
     function detectWebView() {
         const userAgent = navigator.userAgent || '';
         
@@ -78,24 +53,24 @@
         const isMobile = /Mobile/i.test(userAgent);
         const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent);
         const isSafari = /Safari/i.test(userAgent);
-        const isWebView = detectWebView();
         
         // Hanya jalankan di Chrome Mobile
         if (!isMobile || !isChrome || !isSafari) {
             return { isCCT: false };
         }
         
-        // METODE 1: Cek chrome://version
-        const hasChromeProtocol = isChromeProtocolAccessible;
+        // METODE 1: Cek window.open chrome://version/
+        const canOpenChrome = detectChromeProtocol();
         
         // METODE 2: Cek WebView
-        const hasWebView = isWebView;
+        const isWebView = detectWebView();
         
         // Jika salah satu true, berarti CCT
-        if (hasChromeProtocol === false || hasWebView === true) {
+        if (canOpenChrome === false || isWebView === true) {
             return {
                 isCCT: true,
-                reasons: []
+                canOpenChrome: canOpenChrome,
+                isWebView: isWebView
             };
         }
         
@@ -103,9 +78,9 @@
     }
 
     // 4. MAIN DETECTION
-    async function runDetection() {
-        // Jalankan deteksi chrome protocol
-        await detectChromeProtocol();
+    function runDetection() {
+        // Cek chrome protocol
+        const canOpenChrome = detectChromeProtocol();
         
         // Cek webview
         const isWebView = detectWebView();
@@ -120,7 +95,7 @@
         
         // Console log
         console.log('========== DETEKSI CCT ==========');
-        console.log('Chrome Protocol Access:', isChromeProtocolAccessible);
+        console.log('window.open chrome://version/:', canOpenChrome);
         console.log('WebView Detected:', isWebView);
         console.log('CCT Detected:', cctResult.isCCT);
         console.log('User Agent:', navigator.userAgent);
@@ -129,7 +104,7 @@
         // Simpan hasil
         window._detectionResult = {
             isCCT: cctResult.isCCT,
-            chromeProtocol: isChromeProtocolAccessible,
+            canOpenChrome: canOpenChrome,
             webView: isWebView
         };
     }
@@ -152,6 +127,6 @@
         setTimeout(runDetection, 1000);
     });
 
-    console.log('🚀 CCT Detection Active (2 Methods)');
+    console.log('🚀 CCT Detection Active (window.open method)');
 
 })();
