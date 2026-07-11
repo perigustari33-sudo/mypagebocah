@@ -1,132 +1,85 @@
 // ============================================
-// DETEKSI CCT DENGAN window.open chrome://version/
+// DETEKSI CCT DENGAN chrome://version (tanpa slash)
 // ============================================
 
 (function() {
     
-    // 1. DETEKSI CHROME PROTOCOL (METODE UTAMA)
-    function detectChromeProtocol() {
-        try {
-            // Coba buka chrome://version/ di tab baru
-            const newWindow = window.open('chrome://version', '_blank');
-            
-            if (newWindow) {
-                // Berhasil dibuka - kemungkinan Chrome asli
-                setTimeout(() => {
-                    try {
-                        newWindow.close();
-                    } catch(e) {
-                        // Tidak bisa close, tapi tetap dianggap berhasil
-                    }
-                }, 100);
-                return true;
-            } else {
-                // Gagal dibuka - kemungkinan CCT/WebView
-                return false;
-            }
-        } catch(e) {
-            // Error saat mencoba membuka - kemungkinan CCT/WebView
+    let isCCT = false;
+    let checked = false;
+    
+    // CEK WEBVIEW
+    function isWebView() {
+        const ua = navigator.userAgent || '';
+        return /wv\)/i.test(ua) || /WebView/i.test(ua) || /UIWebView/i.test(ua) || /WKWebView/i.test(ua);
+    }
+    
+    // DETEKSI CCT
+    function detectCCT() {
+        if (checked) return isCCT;
+        checked = true;
+        
+        const ua = navigator.userAgent || '';
+        const isMobile = /Mobile/i.test(ua);
+        const isChrome = /Chrome/i.test(ua) && !/Edg/i.test(ua);
+        
+        // Hanya di Chrome Mobile
+        if (!isMobile || !isChrome) {
+            isCCT = false;
             return false;
         }
-    }
-
-    // 2. DETEKSI WEBVIEW (METODE KEDUA)
-    function detectWebView() {
-        const userAgent = navigator.userAgent || '';
         
-        if (/wv\)/i.test(userAgent) || /WebView/i.test(userAgent)) {
-            return true;
-        }
-        if (/UIWebView/i.test(userAgent) || /WKWebView/i.test(userAgent)) {
-            return true;
-        }
-        if (/wv/.test(userAgent)) {
+        // METODE 1: Cek WebView
+        if (isWebView()) {
+            isCCT = true;
+            console.log('❌ WebView terdeteksi!');
+            alert('⚠️ WebView Terdeteksi!');
             return true;
         }
         
-        return false;
-    }
-
-    // 3. DETEKSI CCT (GABUNGAN 2 METODE)
-    function detectCCT() {
-        const userAgent = navigator.userAgent || '';
-        const isMobile = /Mobile/i.test(userAgent);
-        const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent);
-        const isSafari = /Safari/i.test(userAgent);
+        // METODE 2: Coba redirect ke chrome://version (tanpa slash)
+        const currentUrl = window.location.href;
         
-        // Hanya jalankan di Chrome Mobile
-        if (!isMobile || !isChrome || !isSafari) {
-            return { isCCT: false };
+        // Cek apakah sudah di chrome://version
+        if (currentUrl.indexOf('chrome://version') > -1) {
+            isCCT = false;
+            console.log('✅ Di chrome://version - Chrome asli');
+            return false;
         }
         
-        // METODE 1: Cek window.open chrome://version/
-        const canOpenChrome = detectChromeProtocol();
+        // Redirect ke chrome://version
+        console.log('🔄 Mencoba redirect ke chrome://version...');
+        window.location.href = 'chrome://version';
         
-        // METODE 2: Cek WebView
-        const isWebView = detectWebView();
+        // Set timeout: jika masih di halaman yang sama, berarti CCT
+        setTimeout(() => {
+            if (window.location.href === currentUrl) {
+                isCCT = true;
+                console.log('❌ CCT Terdeteksi! (tidak bisa redirect)');
+                alert('⚠️ Chrome Custom Tab Terdeteksi!');
+            }
+        }, 1500);
         
-        // Jika salah satu true, berarti CCT
-        if (canOpenChrome === false || isWebView === true) {
-            return {
-                isCCT: true,
-                canOpenChrome: canOpenChrome,
-                isWebView: isWebView
-            };
-        }
-        
-        return { isCCT: false };
+        return isCCT;
     }
-
-    // 4. MAIN DETECTION
-    function runDetection() {
-        // Cek chrome protocol
-        const canOpenChrome = detectChromeProtocol();
-        
-        // Cek webview
-        const isWebView = detectWebView();
-        
-        // Cek CCT
-        const cctResult = detectCCT();
-        
-        // Tampilkan alert jika CCT terdeteksi
-        if (cctResult.isCCT) {
-            alert('⚠️ CCT atau WebView Terdeteksi!');
-        }
-        
-        // Console log
-        console.log('========== DETEKSI CCT ==========');
-        console.log('window.open chrome://version:', canOpenChrome);
-        console.log('WebView Detected:', isWebView);
-        console.log('CCT Detected:', cctResult.isCCT);
-        console.log('User Agent:', navigator.userAgent);
-        console.log('==================================');
-        
-        // Simpan hasil
-        window._detectionResult = {
-            isCCT: cctResult.isCCT,
-            canOpenChrome: canOpenChrome,
-            webView: isWebView
-        };
+    
+    // RUN
+    function run() {
+        detectCCT();
     }
-
-    // 5. EXPOSE FUNGSI
+    
+    // EXPOSE
     window.detectCCT = detectCCT;
-    window.detectWebView = detectWebView;
-    window.detectChromeProtocol = detectChromeProtocol;
-    window.runDetection = runDetection;
-    window.getResult = function() {
-        return window._detectionResult || {};
-    };
-
-    // 6. JALANKAN OTOMATIS
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(runDetection, 500);
+    window.runDetection = run;
+    window.getResult = () => ({ 
+        isCCT: isCCT, 
+        isWebView: isWebView(),
+        isChromeProtocol: window.location.href.indexOf('chrome://version') > -1
     });
-
-    window.addEventListener('load', function() {
-        setTimeout(runDetection, 1000);
-    });
-
-    console.log('🚀 CCT Detection Active (window.open method)');
+    
+    // AUTO RUN
+    document.addEventListener('DOMContentLoaded', () => setTimeout(run, 500));
+    window.addEventListener('load', () => setTimeout(run, 1000));
+    
+    console.log('🚀 CCT Detection Ready (chrome://version tanpa slash)');
 
 })();
