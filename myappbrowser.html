@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deteksi Referer, InApp & WebView</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #777;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .status-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-card .icon {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .status-card .label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .status-card .value {
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 8px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .status-card .value.true {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-card .value.false {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-card .detail {
+            font-size: 12px;
+            color: #555;
+            margin-top: 8px;
+            word-break: break-all;
+            background: white;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+
+        .detail-box {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .detail-box h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .detail-box .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+        }
+
+        .detail-box .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-box .info-row .label-info {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .detail-box .info-row .value-info {
+            color: #333;
+            font-weight: 600;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-all;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .btn-primary {
+            background: #667eea;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .btn-success {
+            background: #27ae60;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #aaa;
+            font-size: 12px;
+        }
+
+        .user-agent-box {
+            background: #2d3436;
+            color: #dfe6e9;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 11px;
+            word-break: break-all;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .detail-box .info-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .detail-box .info-row .value-info {
+                text-align: left;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Deteksi Browser</h1>
+        <p class="subtitle">Referer • InApp Browser • WebView</p>
+
+        <!-- Status Cards -->
+        <div class="status-grid" id="statusCards">
+            <div class="status-card">
+                <span class="icon">🔗</span>
+                <div class="label">Referer</div>
+                <div class="value" id="refererStatus">Loading...</div>
+                <div class="detail" id="refererDetail">-</div>
+            </div>
+            <div class="status-card">
+                <span class="icon">📱</span>
+                <div class="label">InApp Browser</div>
+                <div class="value" id="inappStatus">Loading...</div>
+                <div class="detail" id="inappDetail">-</div>
+            </div>
+            <div class="status-card">
+                <span class="icon">🌐</span>
+                <div class="label">WebView</div>
+                <div class="value" id="webviewStatus">Loading...</div>
+                <div class="detail" id="webviewDetail">-</div>
+            </div>
+        </div>
+
+        <!-- Detail Box -->
+        <div class="detail-box">
+            <h3>📋 Informasi Lengkap</h3>
+            <div class="info-row">
+                <span class="label-info">User Agent</span>
+                <span class="value-info" id="userAgent">-</span>
+            </div>
+            <div class="info-row">
+                <span class="label-info">Referer URL</span>
+                <span class="value-info" id="refererUrl">-</span>
+            </div>
+            <div class="info-row">
+                <span class="label-info">InApp Name</span>
+                <span class="value-info" id="inappName">-</span>
+            </div>
+            <div class="info-row">
+                <span class="label-info">WebView Type</span>
+                <span class="value-info" id="webviewType">-</span>
+            </div>
+            <div class="info-row">
+                <span class="label-info">Status</span>
+                <span class="value-info" id="statusSummary">-</span>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="runDetection()">🔄 Deteksi Ulang</button>
+            <button class="btn btn-success" onclick="showAlerts()">🔔 Tampilkan Alert</button>
+            <button class="btn btn-danger" onclick="clearAll()">🗑️ Reset</button>
+        </div>
+
+        <div class="footer">
+            <p>Kode JavaScript untuk deteksi referer, inapp browser, dan webview</p>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // DETEKSI REFERER, INAPP BROWSER, DAN WEBVIEW
+        // ============================================
+
+        // 1. DETEKSI REFERER
+        function detectReferer() {
+            const referer = document.referrer || '';
+            
+            if (referer.length > 0) {
+                return {
+                    isReferer: true,
+                    refererUrl: referer,
+                    message: `Referer terdeteksi: ${referer}`
+                };
+            } else {
+                return {
+                    isReferer: false,
+                    refererUrl: '',
+                    message: 'Tidak ada referer (direct access)'
+                };
+            }
+        }
+
+        // 2. DETEKSI INAPP BROWSER
+        function detectInApp() {
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            let appName = '';
+
+            if (userAgent.indexOf('Instagram') > -1) {
+                appName = 'Instagram';
+            } else if (userAgent.indexOf('FBAN') > -1 || userAgent.indexOf('FBAV') > -1) {
+                appName = 'Facebook';
+            } else if (userAgent.indexOf('TikTok') > -1) {
+                appName = 'TikTok';
+            } else if (userAgent.indexOf('Twitter') > -1 || userAgent.indexOf('X') > -1) {
+                appName = 'Twitter/X';
+            } else if (userAgent.indexOf('Line') > -1) {
+                appName = 'LINE';
+            } else if (userAgent.indexOf('WhatsApp') > -1) {
+                appName = 'WhatsApp';
+            } else if (userAgent.indexOf('Telegram') > -1) {
+                appName = 'Telegram';
+            } else if (userAgent.indexOf('Snapchat') > -1) {
+                appName = 'Snapchat';
+            } else if (userAgent.indexOf('MicroMessenger') > -1) {
+                appName = 'WeChat';
+            }
+
+            if (appName) {
+                return {
+                    isInApp: true,
+                    appName: appName,
+                    message: `Dibuka dari aplikasi: ${appName}`
+                };
+            } else {
+                return {
+                    isInApp: false,
+                    appName: '',
+                    message: 'Dibuka dari browser normal'
+                };
+            }
+        }
+
+        // 3. DETEKSI WEBVIEW
+        function detectWebView() {
+            const userAgent = navigator.userAgent || '';
+            let webViewType = '';
+
+            if (/wv\)/i.test(userAgent) || /WebView/i.test(userAgent)) {
+                webViewType = 'Android WebView';
+            } else if (/UIWebView/i.test(userAgent) || /WKWebView/i.test(userAgent)) {
+                webViewType = 'iOS WebView';
+            } else if (/Chrome\/(?:[0-9]+)\.(?:[0-9]+)\.(?:[0-9]+)\.(?:[0-9]+)/i.test(userAgent) && 
+                       /Mobile/i.test(userAgent) && 
+                       !/Safari/i.test(userAgent)) {
+                webViewType = 'Chrome WebView';
+            } else if (/wv/.test(userAgent)) {
+                webViewType = 'Generic WebView';
+            }
+
+            if (webViewType) {
+                return {
+                    isWebView: true,
+                    webViewType: webViewType,
+                    message: `WebView terdeteksi: ${webViewType}`
+                };
+            } else {
+                return {
+                    isWebView: false,
+                    webViewType: '',
+                    message: 'Bukan WebView (browser normal)'
+                };
+            }
+        }
+
+        // 4. FUNGSI UNTUK UPDATE UI
+        function updateUI() {
+            const refererResult = detectReferer();
+            const inAppResult = detectInApp();
+            const webViewResult = detectWebView();
+
+            // Update Referer
+            const refererStatus = document.getElementById('refererStatus');
+            const refererDetail = document.getElementById('refererDetail');
+            if (refererResult.isReferer) {
+                refererStatus.textContent = '✅ ADA';
+                refererStatus.className = 'value true';
+                refererDetail.textContent = refererResult.refererUrl.substring(0, 50) + 
+                    (refererResult.refererUrl.length > 50 ? '...' : '');
+            } else {
+                refererStatus.textContent = '❌ TIDAK ADA';
+                refererStatus.className = 'value false';
+                refererDetail.textContent = 'Direct Access';
+            }
+
+            // Update InApp
+            const inappStatus = document.getElementById('inappStatus');
+            const inappDetail = document.getElementById('inappDetail');
+            if (inAppResult.isInApp) {
+                inappStatus.textContent = '✅ TERDETEKSI';
+                inappStatus.className = 'value true';
+                inappDetail.textContent = inAppResult.appName;
+            } else {
+                inappStatus.textContent = '❌ TIDAK';
+                inappStatus.className = 'value false';
+                inappDetail.textContent = 'Browser Normal';
+            }
+
+            // Update WebView
+            const webviewStatus = document.getElementById('webviewStatus');
+            const webviewDetail = document.getElementById('webviewDetail');
+            if (webViewResult.isWebView) {
+                webviewStatus.textContent = '✅ TERDETEKSI';
+                webviewStatus.className = 'value true';
+                webviewDetail.textContent = webViewResult.webViewType;
+            } else {
+                webviewStatus.textContent = '❌ TIDAK';
+                webviewStatus.className = 'value false';
+                webviewDetail.textContent = 'Browser Normal';
+            }
+
+            // Update Detail Box
+            document.getElementById('userAgent').textContent = navigator.userAgent || 'Tidak tersedia';
+            document.getElementById('refererUrl').textContent = refererResult.refererUrl || 'Tidak ada';
+            document.getElementById('inappName').textContent = inAppResult.appName || 'Tidak ada';
+            document.getElementById('webviewType').textContent = webViewResult.webViewType || 'Tidak ada';
+
+            // Status Summary
+            let statusSummary = '';
+            if (refererResult.isReferer) statusSummary += '🔗 Ada Referer ';
+            if (inAppResult.isInApp) statusSummary += '📱 InApp ';
+            if (webViewResult.isWebView) statusSummary += '🌐 WebView ';
+            if (!statusSummary) statusSummary = '✅ Browser Normal (Direct Access)';
+            document.getElementById('statusSummary').textContent = statusSummary;
+
+            // Simpan hasil untuk digunakan fungsi lain
+            window._detectionResults = {
+                referer: refererResult,
+                inApp: inAppResult,
+                webView: webViewResult
+            };
+
+            // Console log
+            console.log('========== DETEKSI BROWSER ==========');
+            console.log('Referer:', refererResult);
+            console.log('InApp:', inAppResult);
+            console.log('WebView:', webViewResult);
+            console.log('=======================================');
+        }
+
+        // 5. FUNGSI ALERT
+        function showAlerts() {
+            const results = window._detectionResults;
+            if (!results) {
+                alert('⚠️ Silakan deteksi terlebih dahulu!');
+                return;
+            }
+
+            // Alert Referer
+            if (results.referer.isReferer) {
+                alert(`🔗 REFERER DETECTED\n\n${results.referer.message}`);
+            } else {
+                alert(`🔗 REFERER\n\n${results.referer.message}`);
+            }
+
+            // Alert InApp
+            if (results.inApp.isInApp) {
+                alert(`📱 INAPP BROWSER DETECTED\n\n${results.inApp.message}`);
+            } else {
+                alert(`📱 INAPP BROWSER\n\n${results.inApp.message}`);
+            }
+
+            // Alert WebView
+            if (results.webView.isWebView) {
+                alert(`🌐 WEBVIEW DETECTED\n\n${results.webView.message}`);
+            } else {
+                alert(`🌐 WEBVIEW\n\n${results.webView.message}`);
+            }
+        }
+
+        // 6. FUNGSI RESET
+        function clearAll() {
+            if (confirm('Yakin ingin mereset tampilan?')) {
+                document.getElementById('refererStatus').textContent = '-';
+                document.getElementById('refererStatus').className = 'value';
+                document.getElementById('refererDetail').textContent = '-';
+                document.getElementById('inappStatus').textContent = '-';
+                document.getElementById('inappStatus').className = 'value';
+                document.getElementById('inappDetail').textContent = '-';
+                document.getElementById('webviewStatus').textContent = '-';
+                document.getElementById('webviewStatus').className = 'value';
+                document.getElementById('webviewDetail').textContent = '-';
+                document.getElementById('userAgent').textContent = '-';
+                document.getElementById('refererUrl').textContent = '-';
+                document.getElementById('inappName').textContent = '-';
+                document.getElementById('webviewType').textContent = '-';
+                document.getElementById('statusSummary').textContent = '-';
+                window._detectionResults = null;
+                console.log('✅ Reset selesai');
+            }
+        }
+
+        // 7. FUNGSI RUN DETECTION
+        function runDetection() {
+            updateUI();
+            // Tampilkan notifikasi
+            const results = window._detectionResults;
+            let message = '✅ Deteksi selesai!\n\n';
+            if (results.referer.isReferer) message += `🔗 Referer: ${results.referer.refererUrl}\n`;
+            if (results.inApp.isInApp) message += `📱 InApp: ${results.inApp.appName}\n`;
+            if (results.webView.isWebView) message += `🌐 WebView: ${results.webView.webViewType}\n`;
+            if (!results.referer.isReferer && !results.inApp.isInApp && !results.webView.isWebView) {
+                message += 'Browser normal (direct access)';
+            }
+            alert(message);
+        }
+
+        // 8. JALANKAN OTOMATIS SAAT LOAD
+        window.addEventListener('DOMContentLoaded', function() {
+            setTimeout(updateUI, 100);
+        });
+
+        // 9. EXPOSE FUNGSI KE GLOBAL
+        window.runDetection = runDetection;
+        window.showAlerts = showAlerts;
+        window.clearAll = clearAll;
+        window.detectReferer = detectReferer;
+        window.detectInApp = detectInApp;
+        window.detectWebView = detectWebView;
+    </script>
+</body>
+</html>
