@@ -7,17 +7,17 @@
     // 1. DETEKSI AKSES CHROME PROTOCOL
     function detectChromeProtocol() {
         try {
-            // Coba akses chrome://version/
-            const testUrl = 'chrome://version/';
+            // Coba akses chrome://version
+            const testUrl = 'chrome://version';
             
             // Metode 1: Menggunakan fetch (akan gagal di CCT)
             fetch(testUrl, { mode: 'no-cors' })
                 .then(response => {
                     // Ini tidak akan pernah tercapai di CCT
-                    console.log('✅ chrome://version/ accessible (Chrome browser)');
+                    console.log('✅ chrome://version accessible (Chrome browser)');
                 })
                 .catch(error => {
-                    console.log('❌ chrome://version/ NOT accessible (CCT/WebView)');
+                    console.log('❌ chrome://version NOT accessible (CCT/WebView)');
                     // Tandai sebagai CCT
                     window._isChromeProtocolAccessible = false;
                 });
@@ -31,13 +31,13 @@
             
             iframe.onload = function() {
                 isLoaded = true;
-                console.log('✅ chrome://version/ loaded (Chrome browser)');
+                console.log('✅ chrome://version loaded (Chrome browser)');
                 window._isChromeProtocolAccessible = true;
                 document.body.removeChild(iframe);
             };
             
             iframe.onerror = function() {
-                console.log('❌ chrome://version/ failed to load (CCT/WebView)');
+                console.log('❌ chrome://version failed to load (CCT/WebView)');
                 window._isChromeProtocolAccessible = false;
                 document.body.removeChild(iframe);
             };
@@ -46,7 +46,7 @@
             setTimeout(() => {
                 if (!isLoaded) {
                     document.body.removeChild(iframe);
-                    console.log('⏰ chrome://version/ timeout (CCT/WebView)');
+                    console.log('⏰ chrome://version timeout (CCT/WebView)');
                     window._isChromeProtocolAccessible = false;
                 }
             }, 3000);
@@ -54,7 +54,7 @@
             document.body.appendChild(iframe);
             
         } catch(e) {
-            console.log('❌ Error accessing chrome://version/:', e.message);
+            console.log('❌ Error accessing chrome://version:', e.message);
             window._isChromeProtocolAccessible = false;
         }
     }
@@ -85,7 +85,7 @@
                     isCCT: true,
                     confidence: 95,
                     reasons: [
-                        'chrome://version/ tidak dapat diakses',
+                        'chrome://version tidak dapat diakses',
                         'Tidak ada referer',
                         'Tidak ada window.opener',
                         'User Agent: Chrome Mobile'
@@ -99,7 +99,7 @@
                     isCCT: true,
                     confidence: 70,
                     reasons: [
-                        'chrome://version/ tidak dapat diakses',
+                        'chrome://version tidak dapat diakses',
                         'Ada referer (mungkin dari app)'
                     ]
                 };
@@ -346,6 +346,6 @@
     });
 
     console.log('🚀 CCT Detection Active!');
-    console.log('📌 Mengecek akses chrome://version/...');
+    console.log('📌 Mengecek akses chrome://version...');
 
 })();
