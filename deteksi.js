@@ -9,6 +9,9 @@
         const referer = document.referrer || '';
         
         if (referer.length > 0) {
+            // ALERT DI DALAM BLOK TRUE
+            alert(`🔗 REFERER DETECTED\n\nReferer terdeteksi: ${referer}`);
+            
             return {
                 isReferer: true,
                 refererUrl: referer,
@@ -26,7 +29,6 @@
     // 2. DETEKSI INAPP BROWSER (Browser internal aplikasi)
     function detectInApp() {
         const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-        const isInApp = false;
         let appName = '';
 
         // Deteksi Instagram
@@ -65,8 +67,31 @@
         else if (userAgent.indexOf('MicroMessenger') > -1) {
             appName = 'WeChat';
         }
+        // Deteksi Chrome
+        else if (userAgent.indexOf('Chrome') > -1 && userAgent.indexOf('Edg') === -1) {
+            appName = 'Chrome';
+        }
+        // Deteksi Safari
+        else if (userAgent.indexOf('Safari') > -1 && userAgent.indexOf('Chrome') === -1) {
+            appName = 'Safari';
+        }
+        // Deteksi Firefox
+        else if (userAgent.indexOf('Firefox') > -1) {
+            appName = 'Firefox';
+        }
+        // Deteksi Edge
+        else if (userAgent.indexOf('Edg') > -1) {
+            appName = 'Edge';
+        }
+        // Deteksi Opera
+        else if (userAgent.indexOf('OPR') > -1) {
+            appName = 'Opera';
+        }
 
         if (appName) {
+            // ALERT DI DALAM BLOK TRUE
+            alert(`📱 INAPP BROWSER DETECTED\n\nDibuka dari aplikasi: ${appName}`);
+            
             return {
                 isInApp: true,
                 appName: appName,
@@ -84,7 +109,6 @@
     // 3. DETEKSI WEBVIEW
     function detectWebView() {
         const userAgent = navigator.userAgent || '';
-        const isWebView = false;
         let webViewType = '';
 
         // Deteksi Android WebView
@@ -107,6 +131,9 @@
         }
 
         if (webViewType) {
+            // ALERT DI DALAM BLOK TRUE
+            alert(`🌐 WEBVIEW DETECTED\n\nWebView terdeteksi: ${webViewType}`);
+            
             return {
                 isWebView: true,
                 webViewType: webViewType,
@@ -121,46 +148,35 @@
         }
     }
 
-    // 4. EKSEKUSI DETEKSI
+    // 4. EKSEKUSI DETEKSI (alert akan muncul otomatis di dalam fungsi masing-masing jika true)
     const refererResult = detectReferer();
     const inAppResult = detectInApp();
     const webViewResult = detectWebView();
 
-    // 5. TAMPILKAN ALERT BERDASARKAN KONDISI TERPISAH
-    function showAlerts() {
-        // Alert untuk Referer
-        if (refererResult.isReferer) {
-            alert(`🔗 REFERER DETECTED\n\n${refererResult.message}`);
-        } else {
-            alert(`🔗 REFERER\n\n${refererResult.message}`);
-        }
-
-        // Alert untuk InApp
-        if (inAppResult.isInApp) {
-            alert(`📱 INAPP BROWSER DETECTED\n\n${inAppResult.message}`);
-        } else {
-            alert(`📱 INAPP BROWSER\n\n${inAppResult.message}`);
-        }
-
-        // Alert untuk WebView
-        if (webViewResult.isWebView) {
-            alert(`🌐 WEBVIEW DETECTED\n\n${webViewResult.message}`);
-        } else {
-            alert(`🌐 WEBVIEW\n\n${webViewResult.message}`);
-        }
-    }
-
-    // 6. TAMPILKAN DI KONSOLE (untuk debugging)
+    // 5. TAMPILKAN DI KONSOLE (untuk debugging)
     function showConsoleLog() {
         console.log('========== DETEKSI BROWSER ==========');
         console.log('Referer:', refererResult);
         console.log('InApp:', inAppResult);
         console.log('WebView:', webViewResult);
+        console.log('User Agent:', navigator.userAgent);
         console.log('=======================================');
     }
 
+    // 6. EXPOSE FUNGSI KE GLOBAL
+    window.detectReferer = detectReferer;
+    window.detectInApp = detectInApp;
+    window.detectWebView = detectWebView;
+    window.showConsoleLog = showConsoleLog;
+    window.getDetectionResults = function() {
+        return {
+            referer: detectReferer(),
+            inApp: detectInApp(),
+            webView: detectWebView()
+        };
+    };
+
     // 7. JALANKAN
     showConsoleLog();
-    showAlerts();
 
 })();
