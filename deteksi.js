@@ -1,6 +1,6 @@
 // ============================================
 // DETEKSI REFERER, INAPP BROWSER, DAN WEBVIEW
-// MENGGUNAKAN METODE AKSES TERBATAS
+// DENGAN DETEKSI KHUSUS TELEGRAM
 // ============================================
 
 (function() {
@@ -26,166 +26,193 @@
         }
     }
 
-    // 2. DETEKSI AKSES TERBATAS (CORE METHOD)
-    function detectLimitedAccess() {
-        const results = {
-            isLimited: false,
-            reasons: [],
-            details: {}
-        };
+    // 2. DETEKSI KHUSUS TELEGRAM (METODE UTAMA)
+    function detectTelegram() {
+        const userAgent = navigator.userAgent || '';
+        const referer = document.referrer || '';
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        
+        let isTelegram = false;
+        let detectionMethods = [];
+        let confidence = 0;
 
-        try {
-            // 2.1 CEK AKSES KE window.opener
-            // Di Chrome Custom Tab / InApp, akses ke opener terbatas
-            if (window.opener) {
-                try {
-                    const openerOrigin = window.opener.location.origin;
-                    results.details.openerOrigin = openerOrigin;
-                    if (openerOrigin !== window.location.origin) {
-                        results.isLimited = true;
-                        results.reasons.push('Cross-origin opener (akses terbatas)');
-                    }
-                } catch(e) {
-                    // Tidak bisa akses opener = terbatas
-                    results.isLimited = true;
-                    results.reasons.push('Tidak bisa akses window.opener (security restriction)');
-                    results.details.openerError = e.message;
-                }
+        // 2.1 CEK DARI URL PARAMETER (PALING AKURAT)
+        // Telegram sering menambahkan parameter saat membuka link
+        const tgParams = ['tg', 'telegram', 'start', 'startapp', 'tgWebApp', 'tgWebAppData', 'tgWebAppVersion', 'tgWebAppPlatform'];
+        let foundParams = [];
+        
+        urlParams.forEach((value, key) => {
+            if (tgParams.some(p => key.toLowerCase().includes(p))) {
+                foundParams.push(key);
+                confidence += 25;
             }
-
-            // 2.2 CEK AKSES KE window.parent (iframe)
-            if (window.parent !== window.self) {
-                try {
-                    const parentOrigin = window.parent.location.origin;
-                    results.details.parentOrigin = parentOrigin;
-                    if (parentOrigin !== window.location.origin) {
-                        results.isLimited = true;
-                        results.reasons.push('Cross-origin iframe (akses terbatas)');
-                    }
-                } catch(e) {
-                    // Tidak bisa akses parent = terbatas
-                    results.isLimited = true;
-                    results.reasons.push('Tidak bisa akses window.parent (security restriction)');
-                    results.details.parentError = e.message;
-                }
+        });
+        
+        hashParams.forEach((value, key) => {
+            if (tgParams.some(p => key.toLowerCase().includes(p))) {
+                foundParams.push(key);
+                confidence += 25;
             }
+        });
 
-            // 2.3 CEK AKSES KE window.top
-            if (window.top !== window.self) {
-                try {
-                    const topOrigin = window.top.location.origin;
-                    results.details.topOrigin = topOrigin;
-                    if (topOrigin !== window.location.origin) {
-                        results.isLimited = true;
-                        results.reasons.push('Cross-origin top frame (akses terbatas)');
-                    }
-                } catch(e) {
-                    results.isLimited = true;
-                    results.reasons.push('Tidak bisa akses window.top (security restriction)');
-                    results.details.topError = e.message;
-                }
-            }
-
-            // 2.4 CEK AKSES KE localStorage (di WebView sering terbatas)
-            try {
-                const testKey = '_test_access_' + Date.now();
-                localStorage.setItem(testKey, 'test');
-                localStorage.removeItem(testKey);
-                results.details.localStorageAccess = true;
-            } catch(e) {
-                results.isLimited = true;
-                results.reasons.push('localStorage tidak dapat diakses');
-                results.details.localStorageError = e.message;
-            }
-
-            // 2.5 CEK AKSES KE sessionStorage
-            try {
-                const testKey = '_test_access_' + Date.now();
-                sessionStorage.setItem(testKey, 'test');
-                sessionStorage.removeItem(testKey);
-                results.details.sessionStorageAccess = true;
-            } catch(e) {
-                results.isLimited = true;
-                results.reasons.push('sessionStorage tidak dapat diakses');
-                results.details.sessionStorageError = e.message;
-            }
-
-            // 2.6 CEK AKSES KE cookies
-            try {
-                document.cookie = '_test_cookie=test; path=/';
-                const cookieAccess = document.cookie.indexOf('_test_cookie') > -1;
-                document.cookie = '_test_cookie=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
-                results.details.cookieAccess = cookieAccess;
-                if (!cookieAccess) {
-                    results.isLimited = true;
-                    results.reasons.push('Cookies tidak dapat diakses');
-                }
-            } catch(e) {
-                results.isLimited = true;
-                results.reasons.push('Error mengakses cookies');
-                results.details.cookieError = e.message;
-            }
-
-            // 2.7 CEK AKSES KE navigator.clipboard
-            if (navigator.clipboard) {
-                try {
-                    navigator.clipboard.readText().then(
-                        () => { results.details.clipboardAccess = true; },
-                        () => { 
-                            results.isLimited = true;
-                            results.reasons.push('Clipboard tidak dapat diakses (permission denied)');
-                        }
-                    );
-                } catch(e) {
-                    results.isLimited = true;
-                    results.reasons.push('Clipboard tidak dapat diakses');
-                    results.details.clipboardError = e.message;
-                }
-            }
-
-            // 2.8 CEK AKSES KE window.open (popup)
-            try {
-                const testPopup = window.open('about:blank', '_blank', 'width=1,height=1');
-                if (testPopup) {
-                    testPopup.close();
-                    results.details.popupAccess = true;
-                } else {
-                    results.isLimited = true;
-                    results.reasons.push('Popup tidak dapat dibuka (blocked)');
-                }
-            } catch(e) {
-                results.isLimited = true;
-                results.reasons.push('Error membuka popup');
-                results.details.popupError = e.message;
-            }
-
-            // 2.9 CEK AKSES KE history
-            try {
-                const historyLength = history.length;
-                results.details.historyAccess = true;
-            } catch(e) {
-                results.isLimited = true;
-                results.reasons.push('History tidak dapat diakses');
-                results.details.historyError = e.message;
-            }
-
-        } catch(e) {
-            results.isLimited = true;
-            results.reasons.push('Error umum: ' + e.message);
-            results.details.generalError = e.message;
+        if (foundParams.length > 0) {
+            isTelegram = true;
+            detectionMethods.push(`URL parameter Telegram: ${foundParams.join(', ')}`);
         }
 
-        return results;
+        // 2.2 CEK DARI REFERER
+        if (referer) {
+            if (referer.indexOf('t.me') > -1 || 
+                referer.indexOf('telegram.org') > -1 || 
+                referer.indexOf('tg://') > -1) {
+                isTelegram = true;
+                confidence += 30;
+                detectionMethods.push(`Referer Telegram: ${referer}`);
+            }
+        }
+
+        // 2.3 CEK DARI WINDOW OBJECT (WebApp API)
+        if (window.Telegram !== undefined || 
+            window.TelegramWebApp !== undefined || 
+            window.TelegramGameProxy !== undefined) {
+            isTelegram = true;
+            confidence += 40;
+            detectionMethods.push('Telegram WebApp API terdeteksi');
+        }
+
+        // 2.4 CEK DARI PERFORMANCE TIMING
+        try {
+            const perf = performance.getEntriesByType('navigation');
+            if (perf.length > 0) {
+                // Telegram sering menggunakan redirect
+                if (perf[0].redirectCount > 0) {
+                    // Cek apakah redirect dari t.me
+                    const nav = performance.getEntriesByType('navigation')[0];
+                    if (nav && nav.name && nav.name.indexOf('t.me') > -1) {
+                        isTelegram = true;
+                        confidence += 20;
+                        detectionMethods.push('Redirect dari t.me');
+                    }
+                }
+            }
+        } catch(e) {}
+
+        // 2.5 CEK DARI USER AGENT (Deteksi tidak langsung)
+        // Telegram di Android: Chrome + Mobile + (tidak ada indikasi khusus)
+        // Tapi kita bisa gunakan kombinasi
+        if (!isTelegram) {
+            const isMobile = /Mobile/i.test(userAgent);
+            const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent);
+            const isSafari = /Safari/i.test(userAgent);
+            
+            if (isMobile && isChrome && isSafari) {
+                // Cek apakah ada indikasi lain
+                // 1. Tidak ada referer
+                // 2. Tidak ada window.opener
+                // 3. Berasal dari external (bukan bookmark)
+                if (!referer && !window.opener) {
+                    // Ini bisa Telegram atau CCT lain
+                    // Tingkatkan confidence sedikit
+                    confidence += 10;
+                    
+                    // Cek apakah ada parameter tg
+                    if (foundParams.length === 0) {
+                        // Cek dari DOM: apakah ada elemen Telegram?
+                        const hasTelegramElements = document.querySelectorAll(
+                            '[data-telegram], [class*="telegram"], [id*="telegram"]'
+                        ).length > 0;
+                        
+                        if (hasTelegramElements) {
+                            isTelegram = true;
+                            confidence += 15;
+                            detectionMethods.push('Elemen Telegram di DOM');
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2.6 CEK DARI SCREEN ORIENTATION (Telegram sering force portrait)
+        try {
+            if (window.screen && window.screen.orientation) {
+                // Telegram di mobile sering di portrait
+                if (window.screen.orientation.type === 'portrait-primary' || 
+                    window.screen.orientation.type === 'portrait-secondary') {
+                    // Ini hanya indikasi tambahan
+                }
+            }
+        } catch(e) {}
+
+        // 2.7 CEK DARI NAVIGATOR CONNECTION
+        try {
+            if (navigator.connection) {
+                // Telegram sering menggunakan network yang sama dengan aplikasi
+                // Tidak terlalu berguna untuk deteksi
+            }
+        } catch(e) {}
+
+        // 3. TENTUKAN HASIL
+        const isTelegramDetected = isTelegram && confidence >= 20;
+        
+        if (isTelegramDetected) {
+            return {
+                isTelegram: true,
+                confidence: Math.min(confidence, 100),
+                methods: detectionMethods,
+                message: `Telegram terdeteksi (confidence: ${Math.min(confidence, 100)}%)`,
+                details: {
+                    foundParams: foundParams,
+                    referer: referer,
+                    hasTelegramAPI: window.Telegram !== undefined,
+                    hasWebAppAPI: window.TelegramWebApp !== undefined,
+                    userAgent: userAgent
+                }
+            };
+        } else {
+            return {
+                isTelegram: false,
+                confidence: confidence,
+                methods: [],
+                message: 'Bukan Telegram',
+                details: {
+                    foundParams: foundParams,
+                    referer: referer,
+                    hasTelegramAPI: window.Telegram !== undefined,
+                    hasWebAppAPI: window.TelegramWebApp !== undefined,
+                    userAgent: userAgent
+                }
+            };
+        }
     }
 
-    // 3. DETEKSI INAPP BROWSER (MENGGUNAKAN LIMITED ACCESS)
+    // 3. DETEKSI INAPP BROWSER (DENGAN DETEKSI TELEGRAM)
     function detectInApp() {
         const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-        const limitedAccess = detectLimitedAccess();
+        const telegramResult = detectTelegram();
         let appName = '';
         let detectionMethod = '';
 
-        // 3.1 CEK DARI USER AGENT (Metode cepat)
+        // 3.1 CEK TELEGRAM TERLEBIH DAHULU
+        if (telegramResult.isTelegram) {
+            appName = `Telegram (${telegramResult.confidence}% confident)`;
+            detectionMethod = `Telegram Detection: ${telegramResult.methods.join(', ')}`;
+            
+            alert(`📱 TELEGRAM DETECTED\n\n` +
+                `Aplikasi: Telegram\n` +
+                `Confidence: ${telegramResult.confidence}%\n` +
+                `Metode: ${telegramResult.methods.join('\n• ')}`);
+            
+            return {
+                isInApp: true,
+                appName: 'Telegram',
+                detectionMethod: detectionMethod,
+                message: `Dibuka dari aplikasi: Telegram`,
+                telegramDetails: telegramResult.details
+            };
+        }
+
+        // 3.2 CEK DARI USER AGENT (Aplikasi lain)
         if (userAgent.indexOf('Instagram') > -1) {
             appName = 'Instagram';
             detectionMethod = 'User Agent';
@@ -210,10 +237,6 @@
             appName = 'WhatsApp';
             detectionMethod = 'User Agent';
         }
-        else if (userAgent.indexOf('Telegram') > -1) {
-            appName = 'Telegram';
-            detectionMethod = 'User Agent';
-        }
         else if (userAgent.indexOf('Snapchat') > -1) {
             appName = 'Snapchat';
             detectionMethod = 'User Agent';
@@ -223,24 +246,7 @@
             detectionMethod = 'User Agent';
         }
 
-        // 3.2 CEK DARI LIMITED ACCESS (Metode utama untuk CCT)
-        if (!appName && limitedAccess.isLimited) {
-            // Deteksi dari pola akses terbatas
-            const isMobile = /Mobile/i.test(userAgent);
-            const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent);
-            const isSafari = /Safari/i.test(userAgent);
-            
-            if (isMobile && isChrome && isSafari) {
-                // Ini kemungkinan Chrome Custom Tab
-                appName = 'Chrome Custom Tab (InApp)';
-                detectionMethod = 'Limited Access Pattern';
-            } else if (isMobile && (isChrome || isSafari)) {
-                appName = 'InApp Browser (Unknown)';
-                detectionMethod = 'Limited Access Pattern';
-            }
-        }
-
-        // 3.3 CEK DARI REFERER (Tambahan)
+        // 3.3 CEK DARI REFERER
         if (!appName && document.referrer) {
             const ref = document.referrer.toLowerCase();
             if (ref.indexOf('instagram.com') > -1) {
@@ -248,9 +254,6 @@
                 detectionMethod = 'Referer';
             } else if (ref.indexOf('facebook.com') > -1) {
                 appName = 'Facebook';
-                detectionMethod = 'Referer';
-            } else if (ref.indexOf('t.me') > -1 || ref.indexOf('telegram.org') > -1) {
-                appName = 'Telegram';
                 detectionMethod = 'Referer';
             } else if (ref.indexOf('whatsapp.com') > -1) {
                 appName = 'WhatsApp';
@@ -261,42 +264,35 @@
             }
         }
 
-        // 3.4 DETEKSI CHROME CUSTOM TAB DARI POLA AKSES TERBATAS
+        // 3.4 DETEKSI CHROME CUSTOM TAB (Fallback)
         if (!appName) {
             const isMobile = /Mobile/i.test(userAgent);
             const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent);
             const isSafari = /Safari/i.test(userAgent);
             
-            if (isMobile && isChrome && isSafari && limitedAccess.isLimited) {
-                appName = 'Chrome Custom Tab';
-                detectionMethod = 'Limited Access (Chrome Pattern)';
+            if (isMobile && isChrome && isSafari && !document.referrer && !window.opener) {
+                appName = 'Chrome Custom Tab (Unknown App)';
+                detectionMethod = 'CCT Pattern';
             }
         }
 
-        // 3.5 TAMPILKAN ALERT JIKA TERDETEKSI
         if (appName) {
-            const alertMessage = `📱 INAPP BROWSER DETECTED\n\n` +
-                `Aplikasi: ${appName}\n` +
-                `Metode: ${detectionMethod}\n\n` +
-                `Akses Terbatas:\n` +
-                limitedAccess.reasons.map(r => `• ${r}`).join('\n');
-            
-            alert(alertMessage);
+            if (appName !== 'Telegram') {
+                alert(`📱 INAPP BROWSER DETECTED\n\nDibuka dari aplikasi: ${appName}`);
+            }
             
             return {
                 isInApp: true,
                 appName: appName,
                 detectionMethod: detectionMethod,
-                message: `Dibuka dari aplikasi: ${appName}`,
-                limitedAccess: limitedAccess
+                message: `Dibuka dari aplikasi: ${appName}`
             };
         } else {
             return {
                 isInApp: false,
                 appName: '',
                 detectionMethod: '',
-                message: 'Dibuka dari browser normal',
-                limitedAccess: limitedAccess
+                message: 'Dibuka dari browser normal'
             };
         }
     }
@@ -304,10 +300,8 @@
     // 4. DETEKSI WEBVIEW
     function detectWebView() {
         const userAgent = navigator.userAgent || '';
-        const limitedAccess = detectLimitedAccess();
         let webViewType = '';
 
-        // Deteksi dari User Agent
         if (/wv\)/i.test(userAgent) || /WebView/i.test(userAgent)) {
             webViewType = 'Android WebView';
         }
@@ -316,18 +310,6 @@
         }
         else if (window.TelegramWebview !== undefined || window.Telegram !== undefined) {
             webViewType = 'Telegram WebView';
-        }
-        // Deteksi dari limited access (WebView biasanya lebih terbatas)
-        else if (limitedAccess.isLimited && limitedAccess.reasons.length >= 3) {
-            const isMobile = /Mobile/i.test(userAgent);
-            const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent);
-            const isSafari = /Safari/i.test(userAgent);
-            
-            if (isMobile && isChrome && isSafari) {
-                webViewType = 'Chrome Custom Tab / WebView';
-            } else if (isMobile && (isChrome || isSafari)) {
-                webViewType = 'Generic WebView';
-            }
         }
         else if (/wv/.test(userAgent)) {
             webViewType = 'Generic WebView';
@@ -339,41 +321,100 @@
             return {
                 isWebView: true,
                 webViewType: webViewType,
-                message: `WebView terdeteksi: ${webViewType}`,
-                limitedAccess: limitedAccess
+                message: `WebView terdeteksi: ${webViewType}`
             };
         } else {
             return {
                 isWebView: false,
                 webViewType: '',
-                message: 'Bukan WebView (browser normal)',
-                limitedAccess: limitedAccess
+                message: 'Bukan WebView (browser normal)'
             };
         }
     }
 
-    // 5. EKSEKUSI DETEKSI
+    // 5. DETEKSI AKSES TERBATAS
+    function detectLimitedAccess() {
+        const results = {
+            isLimited: false,
+            reasons: [],
+            details: {}
+        };
+
+        try {
+            // Cek window.opener
+            if (window.opener) {
+                try {
+                    const openerOrigin = window.opener.location.origin;
+                    results.details.openerOrigin = openerOrigin;
+                } catch(e) {
+                    results.isLimited = true;
+                    results.reasons.push('Tidak bisa akses window.opener');
+                    results.details.openerError = e.message;
+                }
+            }
+
+            // Cek localStorage
+            try {
+                const testKey = '_test_' + Date.now();
+                localStorage.setItem(testKey, 'test');
+                localStorage.removeItem(testKey);
+                results.details.localStorageAccess = true;
+            } catch(e) {
+                results.isLimited = true;
+                results.reasons.push('localStorage tidak dapat diakses');
+                results.details.localStorageError = e.message;
+            }
+
+            // Cek cookies
+            try {
+                document.cookie = '_test=test; path=/';
+                const cookieAccess = document.cookie.indexOf('_test') > -1;
+                document.cookie = '_test=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+                results.details.cookieAccess = cookieAccess;
+                if (!cookieAccess) {
+                    results.isLimited = true;
+                    results.reasons.push('Cookies tidak dapat diakses');
+                }
+            } catch(e) {
+                results.isLimited = true;
+                results.reasons.push('Error mengakses cookies');
+                results.details.cookieError = e.message;
+            }
+
+        } catch(e) {
+            results.isLimited = true;
+            results.reasons.push('Error umum: ' + e.message);
+        }
+
+        return results;
+    }
+
+    // 6. EKSEKUSI DETEKSI
     const refererResult = detectReferer();
     const inAppResult = detectInApp();
     const webViewResult = detectWebView();
+    const telegramResult = detectTelegram();
     const limitedAccessResult = detectLimitedAccess();
 
-    // 6. TAMPILKAN DI KONSOLE
+    // 7. TAMPILKAN DI KONSOLE
     function showConsoleLog() {
         console.log('========== DETEKSI BROWSER ==========');
         console.log('Referer:', refererResult);
         console.log('InApp:', inAppResult);
         console.log('WebView:', webViewResult);
+        console.log('Telegram Detection:', telegramResult);
         console.log('Limited Access:', limitedAccessResult);
         console.log('User Agent:', navigator.userAgent);
-        console.log('Referer URL:', document.referrer);
+        console.log('Referer URL:', document.referrer || '(none)');
+        console.log('URL Params:', window.location.search);
         console.log('=======================================');
     }
 
-    // 7. EXPOSE FUNGSI KE GLOBAL
+    // 8. EXPOSE FUNGSI KE GLOBAL
     window.detectReferer = detectReferer;
     window.detectInApp = detectInApp;
     window.detectWebView = detectWebView;
+    window.detectTelegram = detectTelegram;
     window.detectLimitedAccess = detectLimitedAccess;
     window.showConsoleLog = showConsoleLog;
     window.getDetectionResults = function() {
@@ -381,11 +422,12 @@
             referer: detectReferer(),
             inApp: detectInApp(),
             webView: detectWebView(),
+            telegram: detectTelegram(),
             limitedAccess: detectLimitedAccess()
         };
     };
 
-    // 8. JALANKAN
+    // 9. JALANKAN
     showConsoleLog();
 
 })();
