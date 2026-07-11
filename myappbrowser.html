@@ -1,9 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://celinebee.cc.cd/deteksi.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test CCT Detection</title>
+    <script src="deteksi.js"></script>
 </head>
 <body>
-    <!-- Isi HTML Anda -->
+    <h1>CCT Detection Test</h1>
+    <button onclick="runDetection()">Test Deteksi</button>
+    <button onclick="console.log(getResult())">Lihat Hasil</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        // Tampilkan hasil di halaman
+        setTimeout(() => {
+            const result = getResult();
+            document.getElementById('result').innerHTML = `
+                <h3>Hasil Deteksi:</h3>
+                <p>CCT: ${result.isCCT ? '✅ TERDETEKSI' : '❌ Tidak'}</p>
+                <p>Chrome Protocol: ${result.chromeProtocol ? '✅ Bisa' : '❌ Tidak'}</p>
+                <p>WebView: ${result.webView ? '✅ Ya' : '❌ Tidak'}</p>
+            `;
+        }, 2000);
+    </script>
 </body>
 </html>
