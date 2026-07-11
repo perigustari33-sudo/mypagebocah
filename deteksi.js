@@ -1,5 +1,5 @@
 // ============================================
-// DETEKSI CCT DENGAN chrome://version (tanpa slash)
+// DETEKSI CCT - TANPA REDIRECT
 // ============================================
 
 (function() {
@@ -13,8 +13,52 @@
         return /wv\)/i.test(ua) || /WebView/i.test(ua) || /UIWebView/i.test(ua) || /WKWebView/i.test(ua);
     }
     
+    // CEK APAKAH BISA AKSES chrome://version MENGGUNAKAN IFRAME
+    function canAccessChromeProtocol() {
+        return new Promise((resolve) => {
+            try {
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = 'chrome://version';
+                
+                let resolved = false;
+                
+                iframe.onload = function() {
+                    if (!resolved) {
+                        resolved = true;
+                        document.body.removeChild(iframe);
+                        resolve(true);
+                    }
+                };
+                
+                iframe.onerror = function() {
+                    if (!resolved) {
+                        resolved = true;
+                        document.body.removeChild(iframe);
+                        resolve(false);
+                    }
+                };
+                
+                setTimeout(() => {
+                    if (!resolved) {
+                        resolved = true;
+                        if (document.body.contains(iframe)) {
+                            document.body.removeChild(iframe);
+                        }
+                        resolve(false);
+                    }
+                }, 2000);
+                
+                document.body.appendChild(iframe);
+                
+            } catch(e) {
+                resolve(false);
+            }
+        });
+    }
+    
     // DETEKSI CCT
-    function detectCCT() {
+    async function detectCCT() {
         if (checked) return isCCT;
         checked = true;
         
@@ -36,35 +80,24 @@
             return true;
         }
         
-        // METODE 2: Coba redirect ke chrome://version (tanpa slash)
-        const currentUrl = window.location.href;
+        // METODE 2: Cek akses chrome://version via iframe
+        const canAccess = await canAccessChromeProtocol();
         
-        // Cek apakah sudah di chrome://version
-        if (currentUrl.indexOf('chrome://version') > -1) {
-            isCCT = false;
-            console.log('✅ Di chrome://version - Chrome asli');
-            return false;
+        if (!canAccess) {
+            isCCT = true;
+            console.log('❌ CCT Terdeteksi! (tidak bisa akses chrome://version)');
+            alert('⚠️ Chrome Custom Tab Terdeteksi!');
+            return true;
         }
         
-        // Redirect ke chrome://version
-        console.log('🔄 Mencoba redirect ke chrome://version...');
-        window.location.href = 'chrome://version';
-        
-        // Set timeout: jika masih di halaman yang sama, berarti CCT
-        setTimeout(() => {
-            if (window.location.href === currentUrl) {
-                isCCT = true;
-                console.log('❌ CCT Terdeteksi! (tidak bisa redirect)');
-                alert('⚠️ Chrome Custom Tab Terdeteksi!');
-            }
-        }, 1500);
-        
-        return isCCT;
+        isCCT = false;
+        console.log('✅ Chrome asli (bisa akses chrome://version)');
+        return false;
     }
     
     // RUN
-    function run() {
-        detectCCT();
+    async function run() {
+        await detectCCT();
     }
     
     // EXPOSE
@@ -72,14 +105,12 @@
     window.runDetection = run;
     window.getResult = () => ({ 
         isCCT: isCCT, 
-        isWebView: isWebView(),
-        isChromeProtocol: window.location.href.indexOf('chrome://version') > -1
+        isWebView: isWebView()
     });
     
     // AUTO RUN
     document.addEventListener('DOMContentLoaded', () => setTimeout(run, 500));
     window.addEventListener('load', () => setTimeout(run, 1000));
     
-    console.log('🚀 CCT Detection Ready (chrome://version tanpa slash)');
-
+    console.log('🚀 CCT Detection Ready (iframe method)');
 })();
