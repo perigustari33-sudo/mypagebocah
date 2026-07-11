@@ -209,6 +209,16 @@
             box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
         }
 
+        .btn-warning {
+            background: #f39c12;
+        }
+
+        .btn-warning:hover {
+            background: #e67e22;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+        }
+
         .footer {
             text-align: center;
             margin-top: 30px;
@@ -216,17 +226,11 @@
             font-size: 12px;
         }
 
-        .user-agent-box {
-            background: #2d3436;
-            color: #dfe6e9;
-            border-radius: 8px;
-            padding: 15px;
-            font-size: 11px;
-            word-break: break-all;
-            margin-top: 15px;
-            font-family: 'Courier New', monospace;
-            max-height: 80px;
-            overflow-y: auto;
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 600;
         }
 
         @media (max-width: 768px) {
@@ -256,30 +260,35 @@
         <h1>🔍 Deteksi Browser</h1>
         <p class="subtitle">Referer • InApp Browser • WebView</p>
 
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            ⏳ Memuat script deteksi...
+        </div>
+
         <!-- Status Cards -->
-        <div class="status-grid" id="statusCards">
+        <div class="status-grid" id="statusCards" style="display: none;">
             <div class="status-card">
                 <span class="icon">🔗</span>
                 <div class="label">Referer</div>
-                <div class="value" id="refererStatus">Loading...</div>
+                <div class="value" id="refererStatus">-</div>
                 <div class="detail" id="refererDetail">-</div>
             </div>
             <div class="status-card">
                 <span class="icon">📱</span>
                 <div class="label">InApp Browser</div>
-                <div class="value" id="inappStatus">Loading...</div>
+                <div class="value" id="inappStatus">-</div>
                 <div class="detail" id="inappDetail">-</div>
             </div>
             <div class="status-card">
                 <span class="icon">🌐</span>
                 <div class="label">WebView</div>
-                <div class="value" id="webviewStatus">Loading...</div>
+                <div class="value" id="webviewStatus">-</div>
                 <div class="detail" id="webviewDetail">-</div>
             </div>
         </div>
 
         <!-- Detail Box -->
-        <div class="detail-box">
+        <div class="detail-box" id="detailBox" style="display: none;">
             <h3>📋 Informasi Lengkap</h3>
             <div class="info-row">
                 <span class="label-info">User Agent</span>
@@ -304,115 +313,30 @@
         </div>
 
         <!-- Buttons -->
-        <div class="btn-group">
+        <div class="btn-group" id="buttonGroup" style="display: none;">
             <button class="btn btn-primary" onclick="runDetection()">🔄 Deteksi Ulang</button>
             <button class="btn btn-success" onclick="showAlerts()">🔔 Tampilkan Alert</button>
+            <button class="btn btn-warning" onclick="showCustomAlert()">⚡ Alert Kustom</button>
             <button class="btn btn-danger" onclick="clearAll()">🗑️ Reset</button>
         </div>
 
         <div class="footer">
-            <p>Kode JavaScript untuk deteksi referer, inapp browser, dan webview</p>
+            <p>Menggunakan external JS: <a href="https://celinebee.cc.cd/deteksi.js" target="_blank">deteksi.js</a></p>
         </div>
     </div>
 
+    <!-- Load External JavaScript -->
+    <script src="https://celinebee.cc.cd/deteksi.js"></script>
+
+    <!-- Custom Script untuk Menggunakan External JS -->
     <script>
         // ============================================
-        // DETEKSI REFERER, INAPP BROWSER, DAN WEBVIEW
+        // MENGGUNAKAN FUNGSI DARI EXTERNAL JS
         // ============================================
 
-        // 1. DETEKSI REFERER
-        function detectReferer() {
-            const referer = document.referrer || '';
-            
-            if (referer.length > 0) {
-                return {
-                    isReferer: true,
-                    refererUrl: referer,
-                    message: `Referer terdeteksi: ${referer}`
-                };
-            } else {
-                return {
-                    isReferer: false,
-                    refererUrl: '',
-                    message: 'Tidak ada referer (direct access)'
-                };
-            }
-        }
-
-        // 2. DETEKSI INAPP BROWSER
-        function detectInApp() {
-            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-            let appName = '';
-
-            if (userAgent.indexOf('Instagram') > -1) {
-                appName = 'Instagram';
-            } else if (userAgent.indexOf('FBAN') > -1 || userAgent.indexOf('FBAV') > -1) {
-                appName = 'Facebook';
-            } else if (userAgent.indexOf('TikTok') > -1) {
-                appName = 'TikTok';
-            } else if (userAgent.indexOf('Twitter') > -1 || userAgent.indexOf('X') > -1) {
-                appName = 'Twitter/X';
-            } else if (userAgent.indexOf('Line') > -1) {
-                appName = 'LINE';
-            } else if (userAgent.indexOf('WhatsApp') > -1) {
-                appName = 'WhatsApp';
-            } else if (userAgent.indexOf('Telegram') > -1) {
-                appName = 'Telegram';
-            } else if (userAgent.indexOf('Snapchat') > -1) {
-                appName = 'Snapchat';
-            } else if (userAgent.indexOf('MicroMessenger') > -1) {
-                appName = 'WeChat';
-            }
-
-            if (appName) {
-                return {
-                    isInApp: true,
-                    appName: appName,
-                    message: `Dibuka dari aplikasi: ${appName}`
-                };
-            } else {
-                return {
-                    isInApp: false,
-                    appName: '',
-                    message: 'Dibuka dari browser normal'
-                };
-            }
-        }
-
-        // 3. DETEKSI WEBVIEW
-        function detectWebView() {
-            const userAgent = navigator.userAgent || '';
-            let webViewType = '';
-
-            if (/wv\)/i.test(userAgent) || /WebView/i.test(userAgent)) {
-                webViewType = 'Android WebView';
-            } else if (/UIWebView/i.test(userAgent) || /WKWebView/i.test(userAgent)) {
-                webViewType = 'iOS WebView';
-            } else if (/Chrome\/(?:[0-9]+)\.(?:[0-9]+)\.(?:[0-9]+)\.(?:[0-9]+)/i.test(userAgent) && 
-                       /Mobile/i.test(userAgent) && 
-                       !/Safari/i.test(userAgent)) {
-                webViewType = 'Chrome WebView';
-            } else if (/wv/.test(userAgent)) {
-                webViewType = 'Generic WebView';
-            }
-
-            if (webViewType) {
-                return {
-                    isWebView: true,
-                    webViewType: webViewType,
-                    message: `WebView terdeteksi: ${webViewType}`
-                };
-            } else {
-                return {
-                    isWebView: false,
-                    webViewType: '',
-                    message: 'Bukan WebView (browser normal)'
-                };
-            }
-        }
-
-        // 4. FUNGSI UNTUK UPDATE UI
+        // Fungsi untuk update UI menggunakan hasil deteksi dari external JS
         function updateUI() {
+            // Gunakan fungsi dari external JS
             const refererResult = detectReferer();
             const inAppResult = detectInApp();
             const webViewResult = detectWebView();
@@ -484,39 +408,84 @@
             console.log('InApp:', inAppResult);
             console.log('WebView:', webViewResult);
             console.log('=======================================');
+
+            // Tampilkan elemen yang sebelumnya disembunyikan
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('statusCards').style.display = 'grid';
+            document.getElementById('detailBox').style.display = 'block';
+            document.getElementById('buttonGroup').style.display = 'flex';
         }
 
-        // 5. FUNGSI ALERT
+        // Fungsi untuk menampilkan alert dari external JS
         function showAlerts() {
+            if (typeof window.showDetectionAlerts === 'function') {
+                // Gunakan fungsi bawaan dari external JS jika ada
+                window.showDetectionAlerts();
+            } else {
+                // Atau buat manual
+                const results = window._detectionResults;
+                if (!results) {
+                    alert('⚠️ Silakan deteksi terlebih dahulu!');
+                    return;
+                }
+
+                // Alert Referer
+                if (results.referer.isReferer) {
+                    alert(`🔗 REFERER DETECTED\n\n${results.referer.message}`);
+                } else {
+                    alert(`🔗 REFERER\n\n${results.referer.message}`);
+                }
+
+                // Alert InApp
+                if (results.inApp.isInApp) {
+                    alert(`📱 INAPP BROWSER DETECTED\n\n${results.inApp.message}`);
+                } else {
+                    alert(`📱 INAPP BROWSER\n\n${results.inApp.message}`);
+                }
+
+                // Alert WebView
+                if (results.webView.isWebView) {
+                    alert(`🌐 WEBVIEW DETECTED\n\n${results.webView.message}`);
+                } else {
+                    alert(`🌐 WEBVIEW\n\n${results.webView.message}`);
+                }
+            }
+        }
+
+        // Fungsi untuk menampilkan alert kustom (gabungan)
+        function showCustomAlert() {
             const results = window._detectionResults;
             if (!results) {
                 alert('⚠️ Silakan deteksi terlebih dahulu!');
                 return;
             }
 
-            // Alert Referer
-            if (results.referer.isReferer) {
-                alert(`🔗 REFERER DETECTED\n\n${results.referer.message}`);
-            } else {
-                alert(`🔗 REFERER\n\n${results.referer.message}`);
-            }
-
-            // Alert InApp
-            if (results.inApp.isInApp) {
-                alert(`📱 INAPP BROWSER DETECTED\n\n${results.inApp.message}`);
-            } else {
-                alert(`📱 INAPP BROWSER\n\n${results.inApp.message}`);
-            }
-
-            // Alert WebView
-            if (results.webView.isWebView) {
-                alert(`🌐 WEBVIEW DETECTED\n\n${results.webView.message}`);
-            } else {
-                alert(`🌐 WEBVIEW\n\n${results.webView.message}`);
-            }
+            let message = '📊 HASIL DETEKSI\n';
+            message += '═'.repeat(30) + '\n\n';
+            
+            // Referer
+            message += '🔗 REFERER: ';
+            message += results.referer.isReferer ? 
+                `ADA\n   ${results.referer.refererUrl}\n` : 
+                'TIDAK ADA (Direct Access)\n';
+            
+            // InApp
+            message += '\n📱 INAPP: ';
+            message += results.inApp.isInApp ? 
+                `TERDETEKASI\n   Aplikasi: ${results.inApp.appName}\n` : 
+                'TIDAK (Browser Normal)\n';
+            
+            // WebView
+            message += '\n🌐 WEBVIEW: ';
+            message += results.webView.isWebView ? 
+                `TERDETEKASI\n   Tipe: ${results.webView.webViewType}\n` : 
+                'TIDAK (Browser Normal)\n';
+            
+            message += '\n' + '═'.repeat(30);
+            alert(message);
         }
 
-        // 6. FUNGSI RESET
+        // Fungsi reset
         function clearAll() {
             if (confirm('Yakin ingin mereset tampilan?')) {
                 document.getElementById('refererStatus').textContent = '-';
@@ -538,7 +507,7 @@
             }
         }
 
-        // 7. FUNGSI RUN DETECTION
+        // Fungsi run detection
         function runDetection() {
             updateUI();
             // Tampilkan notifikasi
@@ -553,18 +522,40 @@
             alert(message);
         }
 
-        // 8. JALANKAN OTOMATIS SAAT LOAD
-        window.addEventListener('DOMContentLoaded', function() {
-            setTimeout(updateUI, 100);
+        // Cek apakah external JS sudah loaded
+        function checkExternalJS() {
+            if (typeof detectReferer === 'function' && 
+                typeof detectInApp === 'function' && 
+                typeof detectWebView === 'function') {
+                console.log('✅ External JS loaded successfully!');
+                updateUI();
+            } else {
+                console.log('⏳ Menunggu external JS selesai dimuat...');
+                setTimeout(checkExternalJS, 500);
+            }
+        }
+
+        // Jalankan saat DOM ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tunggu sebentar untuk memastikan external JS termuat
+            setTimeout(checkExternalJS, 1000);
         });
 
-        // 9. EXPOSE FUNGSI KE GLOBAL
+        // Expose fungsi ke global
         window.runDetection = runDetection;
         window.showAlerts = showAlerts;
+        window.showCustomAlert = showCustomAlert;
         window.clearAll = clearAll;
-        window.detectReferer = detectReferer;
-        window.detectInApp = detectInApp;
-        window.detectWebView = detectWebView;
+        window.updateUI = updateUI;
+
+        // Event listener untuk error loading
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'SCRIPT') {
+                document.getElementById('loading').innerHTML = 
+                    '❌ Gagal memuat script external. Periksa koneksi internet Anda.';
+                document.getElementById('loading').style.color = '#e74c3c';
+            }
+        }, true);
     </script>
 </body>
 </html>
