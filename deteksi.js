@@ -8,7 +8,7 @@
     function detectChromeProtocol() {
         try {
             // Coba buka chrome://version/ di tab baru
-            const newWindow = window.open('chrome://version/', '_blank');
+            const newWindow = window.open('chrome://version', '_blank');
             
             if (newWindow) {
                 // Berhasil dibuka - kemungkinan Chrome asli
@@ -95,7 +95,7 @@
         
         // Console log
         console.log('========== DETEKSI CCT ==========');
-        console.log('window.open chrome://version/:', canOpenChrome);
+        console.log('window.open chrome://version:', canOpenChrome);
         console.log('WebView Detected:', isWebView);
         console.log('CCT Detected:', cctResult.isCCT);
         console.log('User Agent:', navigator.userAgent);
