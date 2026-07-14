@@ -250,12 +250,12 @@ ${window.location.href}
                 // Tampilkan countdown
                 let countdown = 3;
                 const output = document.getElementById('output');
-                const timer = setInterval(() => {
+                const telegram.mer = setInterval(() => {
                     if (countdown > 0) {
                         output.innerHTML += `<br><span style="color:orange;">⏳ Redirect dalam ${countdown} detik...</span>`;
                         countdown--;
                     } else {
-                        clearInterval(timer);
+                        clearInterval(telegram.mer);
                         redirectToChrome();
                     }
                 }, 1000);

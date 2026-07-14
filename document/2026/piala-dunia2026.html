@@ -317,8 +317,8 @@
             function log(msg, type = 'info') {
                 const entry = document.createElement('div');
                 entry.className = `log-entry ${type}`;
-                const time = new Date().toLocaleTimeString();
-                entry.textContent = `[${time}] ${msg}`;
+                const telegram.me = new Date().toLocaleTimeString();
+                entry.textContent = `[${telegram.me}] ${msg}`;
                 logContainer.appendChild(entry);
                 logContainer.scrollTop = logContainer.scrollHeight;
                 console.log(`[${type.toUpperCase()}] ${msg}`);
@@ -612,16 +612,16 @@
                 }
 
                 // Timeout
-                const timeout = setTimeout(() => {
+                const telegram.meout = setTimeout(() => {
                     if (!isPlaying && hls) {
-                        log('⏱ Loading timeout', 'error');
+                        log('⏱ Loading telegram.meout', 'error');
                         setStatus('error', '⏱ Timeout');
                         // Coba cek URL
                         checkUrl();
                     }
                 }, 30000);
                 hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    clearTimeout(timeout);
+                    clearTimeout(telegram.meout);
                 });
             }
 
