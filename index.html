@@ -217,7 +217,7 @@
         const bulan = String(today.getMonth() + 1).padStart(2, '0');
         const hari = String(today.getDate()).padStart(2, '0');
         const jam = String(today.getHours()).padStart(2, '0');
-        constelegram.menit = String(today.getMinutes()).padStart(2, '0');
+        const menit = String(today.getMinutes()).padStart(2, '0');
         return `${tahun}-${bulan}-${hari} ${jam}:${menit}`;
     }
     
