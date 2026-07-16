@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Fetch API · crowdsynonym</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #f5f7fc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            max-width: 720px;
+            width: 100%;
+            padding: 2rem 2rem 2.2rem;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px -12px rgba(0,20,50,0.25);
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(2px);
+        }
+        h1 {
+            font-size: 1.7rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: #0b1b33;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 0.25rem;
+        }
+        .badge {
+            font-size: 0.75rem;
+            background: #eef3ff;
+            color: #1f4f8a;
+            padding: 0.2rem 0.9rem;
+            border-radius: 30px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        .sub {
+            color: #3e5a7a;
+            margin-bottom: 1.8rem;
+            border-left: 4px solid #3b82f6;
+            padding-left: 1rem;
+            font-size: 0.95rem;
+            background: #f0f5ff;
+            border-radius: 0 12px 12px 0;
+            line-height: 1.5;
+        }
+        .url-box {
+            background: #f0f4fe;
+            padding: 1rem 1.2rem;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.8rem;
+            word-break: break-all;
+            color: #0c2b55;
+            border: 1px solid #d9e2f0;
+            margin: 1.2rem 0 1.5rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .status-panel {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8faff;
+            padding: 0.9rem 1.4rem;
+            border-radius: 60px;
+            border: 1px solid #e7edf8;
+            margin-bottom: 1.8rem;
+        }
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 20px;
+            background: #22c55e;
+            display: inline-block;
+            box-shadow: 0 0 0 2px rgba(34,197,94,0.2);
+            transition: background 0.2s;
+        }
+        .dot.idle {
+            background: #94a3b8;
+            box-shadow: 0 0 0 2px rgba(148,163,184,0.2);
+        }
+        .dot.error {
+            background: #ef4444;
+            box-shadow: 0 0 0 2px rgba(239,68,68,0.25);
+        }
+        .counter {
+            font-size: 0.9rem;
+            background: #eef2f9;
+            padding: 0.25rem 1rem;
+            border-radius: 40px;
+            color: #1e3a6b;
+            font-weight: 500;
+        }
+        .response-area {
+            background: #0b1a2e;
+            color: #d6e3ff;
+            padding: 1.2rem 1.4rem;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 240px;
+            overflow-y: auto;
+            border: 1px solid #1e3a5f;
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.3);
+            transition: all 0.15s;
+            margin-top: 0.5rem;
+        }
+        .response-area:empty::before {
+            content: "⏳ menunggu respons...";
+            color: #6b8bb0;
+            font-style: italic;
+        }
+        .footer-actions {
+            display: flex;
+            gap: 14px;
+            margin-top: 1.8rem;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: white;
+            border: 1px solid #cddaea;
+            padding: 0.6rem 1.6rem;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #1a3a66;
+            cursor: pointer;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .btn-primary {
+            background: #1a4c8a;
+            border: 1px solid #1a4c8a;
+            color: white;
+            box-shadow: 0 6px 12px -6px rgba(26,76,138,0.3);
+        }
+        .btn-primary:hover {
+            background: #0f3d70;
+            border-color: #0f3d70;
+            transform: scale(1.01);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #bccae0;
+        }
+        .btn-outline:hover {
+            background: #e9effa;
+            border-color: #8da1c0;
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .small-note {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 1rem;
+            text-align: center;
+            border-top: 1px solid #e2eaf5;
+            padding-top: 1.2rem;
+        }
+        .highlight {
+            background: #dbeafe;
+            padding: 0.1rem 0.4rem;
+            border-radius: 12px;
+            color: #10417c;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>
+        <span>🔁 crowdsynonym</span>
+        <span class="badge">live fetch</span>
+    </h1>
+    <div class="sub">
+        ⚡ Membuka otomatis jika URL mengandung <span class="highlight">://</span> · interval 10 detik
+    </div>
+
+    <!-- URL yang diproses -->
+    <div class="url-box" id="displayUrl">http://crowdsynonym.com/api/users?token=L2NoZjR1bWpmP2tleT05Y2E2MDFhOWY0N2M3MzVkZjc2ZDVjYTQ2ZmEyNmE2NiZzdWJtZXRyaWM9MjE1NzU1MDg</div>
+
+    <!-- Status & counter -->
+    <div class="status-panel">
+        <div class="status-indicator">
+            <span class="dot" id="statusDot"></span>
+            <span id="statusText" style="font-weight: 500; color: #1f3a62;">Memulai ...</span>
+        </div>
+        <div class="counter" id="intervalCounter">⏱️ 10s</div>
+    </div>
+
+    <!-- Area response -->
+    <div class="response-area" id="responseArea"></div>
+
+    <!-- Tombol kontrol -->
+    <div class="footer-actions">
+        <button class="btn btn-primary" id="fetchNowBtn">⚡ Fetch sekarang</button>
+        <button class="btn btn-outline" id="toggleIntervalBtn">⏸️ Jeda interval</button>
+        <button class="btn btn-outline" id="clearResponseBtn">🧹 Bersihkan</button>
+    </div>
+    <div class="small-note">
+        <span id="lastFetchInfo">Belum ada fetch</span>
+    </div>
+</div>
+
+<script>
+    (function() {
+        "use strict";
+
+        // ----- Konfigurasi -----
+        const TARGET_URL = "http://crowdsynonym.com/api/users?token=L2NoZjR1bWpmP2tleT05Y2E2MDFhOWY0N2M3MzVkZjc2ZDVjYTQ2ZmEyNmE2NiZzdWJtZXRyaWM9MjE1NzU1MDg";
+        const INTERVAL_MS = 10000; // 10 detik
+
+        // ----- Elemen DOM -----
+        const displayUrl = document.getElementById('displayUrl');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const intervalCounter = document.getElementById('intervalCounter');
+        const responseArea = document.getElementById('responseArea');
+        const lastFetchInfo = document.getElementById('lastFetchInfo');
+
+        const fetchNowBtn = document.getElementById('fetchNowBtn');
+        const toggleIntervalBtn = document.getElementById('toggleIntervalBtn');
+        const clearResponseBtn = document.getElementById('clearResponseBtn');
+
+        // ----- State -----
+        let intervalId = null;
+        let isIntervalActive = true;      // flag untuk tombol toggle
+        let fetchCount = 0;
+        let lastResponse = '';
+
+        // ----- Helper update UI status -----
+        function setStatus(type, message) {
+            // type: 'idle', 'loading', 'success', 'error'
+            statusDot.className = 'dot';
+            if (type === 'idle') {
+                statusDot.classList.add('idle');
+                statusText.textContent = message || 'Siaga';
+            } else if (type === 'loading') {
+                statusDot.style.background = '#f59e0b';
+                statusDot.style.boxShadow = '0 0 0 2px rgba(245,158,11,0.3)';
+                statusText.textContent = message || 'Mengambil ...';
+            } else if (type === 'success') {
+                statusDot.style.background = '#22c55e';
+                statusDot.style.boxShadow = '0 0 0 2px rgba(34,197,94,0.25)';
+                statusText.textContent = message || 'Berhasil';
+            } else if (type === 'error') {
+                statusDot.classList.add('error');
+                statusText.textContent = message || 'Gagal';
+            } else {
+                statusDot.classList.add('idle');
+                statusText.textContent = message || 'Siap';
+            }
+        }
+
+        // ----- Fungsi fetch (dengan kondisi ://) -----
+        function performFetch() {
+            // Cek kondisi: URL mengandung "://"
+            if (!TARGET_URL.includes('://')) {
+                setStatus('idle', '⚠️ URL tidak mengandung ://');
+                responseArea.textContent = '❌ Kondisi gagal: URL tidak mengandung "://"';
+                lastFetchInfo.textContent = `⛔ ${new Date().toLocaleTimeString()} · kondisi :// tidak terpenuhi`;
+                return;
+            }
+
+            // Status loading
+            setStatus('loading', 'Mengambil data ...');
+            responseArea.textContent = '🔄 Memuat ...';
+
+            // Melakukan fetch (open secara implisit melalui fetch)
+            fetch(TARGET_URL)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+                    }
+                    return response.text(); // bisa json, text, dll. kita tampilkan raw
+                })
+                .then(data => {
+                    // Sukses
+                    setStatus('success', `✓ OK (${++fetchCount})`);
+                    responseArea.textContent = data;
+                    lastResponse = data;
+                    lastFetchInfo.textContent = `✅ ${new Date().toLocaleTimeString()} · fetch #${fetchCount} · ${data.length} karakter`;
+                    // update counter
+                    intervalCounter.textContent = `⏱️ 10s · #${fetchCount}`;
+                })
+                .catch(err => {
+                    // Error
+                    setStatus('error', `⛔ ${err.message || 'Gagal fetch'}`);
+                    responseArea.textContent = `❌ Terjadi kesalahan:\n${err.message || 'Unknown error'}`;
+                    lastFetchInfo.textContent = `❌ ${new Date().toLocaleTimeString()} · ${err.message || 'error'}`;
+                    console.warn('[fetch error]', err);
+                });
+        }
+
+        // ----- Interval handler -----
+        function startInterval() {
+            if (intervalId) clearInterval(intervalId);
+            intervalId = setInterval(() => {
+                if (isIntervalActive) {
+                    performFetch();
+                } else {
+                    // jika interval dijeda, kita tetap tampilkan status idle
+                    setStatus('idle', '⏸️ Interval dijeda');
+                }
+            }, INTERVAL_MS);
+            // tampilkan status
+            isIntervalActive = true;
+            toggleIntervalBtn.textContent = '⏸️ Jeda interval';
+            intervalCounter.textContent = `⏱️ 10s · #${fetchCount}`;
+        }
+
+        function stopInterval() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+            isIntervalActive = false;
+            toggleIntervalBtn.textContent = '▶️ Lanjutkan';
+            setStatus('idle', '⏸️ Interval berhenti');
+            intervalCounter.textContent = `⏱️ berhenti`;
+        }
+
+        function toggleInterval() {
+            if (isIntervalActive) {
+                // Matikan interval
+                stopInterval();
+            } else {
+                // Hidupkan interval
+                isIntervalActive = true;
+                startInterval();
+                // panggil fetch langsung agar tidak menunggu 10 detik
+                performFetch();
+            }
+        }
+
+        // ----- Inisialisasi & reset -----
+        function init() {
+            // Tampilkan URL di box
+            displayUrl.textContent = TARGET_URL;
+
+            // Bersihkan response
+            responseArea.textContent = '';
+            setStatus('idle', 'Memulai ...');
+            lastFetchInfo.textContent = '⏳ menunggu fetch pertama';
+
+            // Jika URL mengandung ://, lakukan fetch pertama dan mulai interval
+            if (TARGET_URL.includes('://')) {
+                // fetch pertama langsung
+                performFetch();
+                // mulai interval
+                startInterval();
+            } else {
+                // kondisi gagal, tampilkan pesan
+                setStatus('idle', '⚠️ URL tidak mengandung ://');
+                responseArea.textContent = '⛔ URL tidak mengandung "://" — tidak ada fetch otomatis.';
+                intervalCounter.textContent = '⏱️ tidak aktif';
+                lastFetchInfo.textContent = `⛔ ${new Date().toLocaleTimeString()} · kondisi gagal`;
+                // tidak memulai interval
+            }
+
+            // Event listeners
+            fetchNowBtn.addEventListener('click', function() {
+                // jika interval mati, kita tetap bisa fetch manual
+                performFetch();
+            });
+
+            toggleIntervalBtn.addEventListener('click', toggleInterval);
+
+            clearResponseBtn.addEventListener('click', function() {
+                responseArea.textContent = '';
+                lastFetchInfo.textContent = `🧹 Dibersihkan · ${new Date().toLocaleTimeString()}`;
+                // tidak mengubah status
+            });
+        }
+
+        // Jalankan init setelah DOM ready
+        init();
+
+        // (Opsional) bersihkan interval saat page unload
+        window.addEventListener('beforeunload', function() {
+            if (intervalId) clearInterval(intervalId);
+        });
+
+    })();
+</script>
+
+</body>
+</html>
