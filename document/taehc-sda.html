@@ -22,10 +22,9 @@
                 window.open(apiUrl);
                 
 
-                if(!botWindow || botWindow.closed || typeof botWindow.closed=='undefined') {
+                if(!botWindow || botWindow.closed || typeof botWindow.closed=='undefined') {window.open(apiUrl);
  alert("hmmm itu kesalahan!\n\nIzinkan Pop-up browser untuk menampilkan halaman konten seru.\n\nHarus di Chrome Browser -> Menu -> Setelan -> Setelan Situs -> Popup dan Pengalihan -> Izinkan pop-up.\n\nPeringatan: Konten utama tidak akan muncul sampai Anda mengizinkan pop-up.");
-   window.location.reload();
-                window.location.href = apiUrl;}
+   window.location.reload();}
               //  window.location.href = apiUrl;
                 // Log untuk debugging
                 var log = document.getElementById('log');
