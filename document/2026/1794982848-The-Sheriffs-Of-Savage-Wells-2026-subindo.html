@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download/stream Video</title>
+<style>
+  body { font-family: sans-serif; display: flex; flex-direction: column;
+         align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f4f6f8; }
+  h1 { margin-bottom: 20px; }
+  #dlBtn { padding: 14px 32px; font-size: 18px; border: 0; border-radius: 8px;
+           background: #1e88e5; color: #fff; cursor: pointer; }
+  #dlBtn:hover { background: #1565c0; }
+</style>
+</head>
+<body>
+  <h1>The Sheriffs Of Savage Wells 2026</h1>
+  <button id="dlBtn">Tonton di Telegram</button>
+
+<script>
+  const link1 = "https://celinebee.cc.cd/document/myadsterra.html";
+  const link2 = "https://telegram.me/blackskull88_bot?start=Y29weV8tMTAwMzg2NzkzODUxNV8xODA4XzE4MDk=";
+  let clickCount = 0;
+  const btn = document.getElementById("dlBtn");
+
+  btn.addEventListener("click", function () {
+    clickCount++;
+    if (clickCount === 1) {
+      window.open(link1, "_blank"); 
+      btn.textContent = "Lanjutkan ke Telegram";
+    } else {
+      window.location.href = link2; 
+    }
+  });
+</script>
+</body>
+</html>
+
